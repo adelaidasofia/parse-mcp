@@ -1,0 +1,20 @@
+# Core MCP runtime
+fastmcp>=3.2.3
+
+# Default backend: Microsoft markitdown (MIT). Base install covers
+# PDF, DOCX, PPTX, XLSX, HTML, CSV, JSON, XML, EPub, ZIP. Audio + YouTube
+# require markitdown[all] which pulls youtube-transcript-api~=1.0 (no
+# Python 3.14 wheel as of 2026-05). Install [all] only on <3.14.
+markitdown>=0.1.5
+
+# Optional escalation backends. Imported lazily; absence of any one of
+# these is logged but does not crash the server. Operators install only
+# the backends they need.
+#
+#   pip install docling          # IBM, table-heavy + scanned PDFs
+#   pip install llama-cloud-services  # LlamaParse, cloud, BYOK API key
+#   pip install unstructured      # 30+ formats, semantic chunking
+#
+# Anthropic SDK powers the `interpret` tool (Claude reads the parsed
+# markdown and answers an instruction). Requires ANTHROPIC_API_KEY.
+anthropic>=0.40.0

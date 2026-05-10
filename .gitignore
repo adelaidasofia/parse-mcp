@@ -1,0 +1,20 @@
+# Env + secrets
+.env
+.env.local
+
+# Python tooling
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Virtualenvs
+.venv/
+venv/
+
+# Cached parsed outputs / model weights
+.parse_cache/
+*.model
