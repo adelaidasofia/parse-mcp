@@ -1,0 +1,6 @@
+{
+  "name": "parse-mcp",
+  "description": "One MCP, many parsers. Default markitdown (free, fast, MIT). Escalate to Docling (table-heavy, scanned PDFs) or LlamaParse (cloud, BYOK) when markitdown's quality isn't enough. Plus an interpret tool that pipes parsed markdown into Claude for summarize/extract tasks.",
+  "version": "0.1.0",
+  "author": { "name": "Mycelium AI", "url": "https://myceliumai.co" }
+}
