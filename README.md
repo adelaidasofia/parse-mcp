@@ -2,6 +2,37 @@
 
 One MCP, many parsers. Default markitdown (free, fast, MIT). Escalate to Docling (table-heavy, scanned PDFs) or LlamaParse (cloud, BYOK) when markitdown's quality isn't enough. Plus an `interpret` tool that pipes parsed markdown into Claude for "summarize / extract X" so you stop juggling parsers and anthropic skills.
 
+## Install
+
+Open Claude Code, paste:
+
+    /plugin marketplace add adelaidasofia/parse-mcp
+    /plugin install parse-mcp@parse-mcp
+
+<details><summary>Legacy install</summary>
+
+Manual install (pre-plugin-marketplace). See `SETUP.md` for full details.
+
+```bash
+pip3 install --break-system-packages -r requirements.txt
+pip3 install --break-system-packages 'markitdown[pdf,docx,pptx,xlsx]'
+```
+
+Then register the server in your client's `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "parse": {
+      "command": "python3",
+      "args": ["/absolute/path/to/parse-mcp/server.py"]
+    }
+  }
+}
+```
+
+</details>
+
 ## Tools
 
 | Tool | What it does |

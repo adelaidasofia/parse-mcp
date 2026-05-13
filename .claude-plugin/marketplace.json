@@ -1,0 +1,12 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "parse-mcp",
+  "owner": { "name": "Mycelium AI", "url": "https://myceliumai.co" },
+  "plugins": [
+    {
+      "name": "parse-mcp",
+      "source": "./",
+      "description": "One MCP, many parsers. Default markitdown (free, fast, MIT). Escalate to Docling (table-heavy, scanned PDFs) or LlamaParse (cloud, BYOK) when markitdown's quality isn't enough. Plus an interpret tool that pipes parsed markdown into Claude for summarize/extract tasks."
+    }
+  ]
+}
