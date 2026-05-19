@@ -22,3 +22,11 @@ parse-mcp = "server:mcp.run"
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Flat layout: declare shipped units explicitly so setuptools auto-discovery
+# does not fail with "Multiple top-level packages discovered in a flat-layout".
+# `hooks/` is Claude Code plugin config (no __init__.py), not a package;
+# `tests/` is not shipped.
+py-modules = ["server", "router", "interpret"]
+packages = ["backends"]
