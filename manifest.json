@@ -1,0 +1,57 @@
+{
+  "manifest_version": "0.4",
+  "name": "parse-mcp",
+  "display_name": "One MCP, many parsers",
+  "version": "0.1.0",
+  "description": "One MCP, many parsers. Routes between markitdown, Docling, and LlamaParse. Plus an interpret tool that pipes parsed markdown into Claude.",
+  "author": {
+    "name": "Adelaida Diaz-Roa",
+    "url": "https://github.com/adelaidasofia"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adelaidasofia/parse-mcp.git"
+  },
+  "homepage": "https://github.com/adelaidasofia/parse-mcp",
+  "documentation": "https://github.com/adelaidasofia/parse-mcp#readme",
+  "support": "https://github.com/adelaidasofia/parse-mcp/issues",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "fastmcp",
+    "parse"
+  ],
+  "server": {
+    "type": "python",
+    "entry_point": "server.py",
+    "mcp_config": {
+      "command": "python3",
+      "args": [
+        "${__dirname}/server.py"
+      ],
+      "env": {
+        "LLAMAPARSE_API_KEY": "${user_config.llamaparse_api_key}"
+      }
+    }
+  },
+  "tools_generated": true,
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ]
+  },
+  "user_config": {
+    "llamaparse_api_key": {
+      "type": "string",
+      "title": "LlamaParse API key (optional)",
+      "description": "Optional fallback backend; only required for llamaparse routing",
+      "required": false,
+      "sensitive": true
+    }
+  }
+}
