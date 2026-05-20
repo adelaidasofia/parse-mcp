@@ -11,12 +11,12 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/adelaidasofia/parse-mcp/releases/latest/download/parse-mcp.mcpb",
+      "identifier": "https://github.com/adelaidasofia/parse-mcp/releases/download/v0.1.0/parse-mcp.mcpb",
       "version": "0.1.0",
       "transport": {
         "type": "stdio"
       },
-      "fileSha256": "d197535ecba78a1a5c516238acdf3739ef397324f45b553c39d9990f2619ff6d",
+      "fileSha256": "1a62096cee6eb5f8c11a165dbc42314478ce1f313c7f88f6efdd5becbff19914",
       "environmentVariables": [
         {
           "name": "LLAMAPARSE_API_KEY",

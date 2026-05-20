@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "description": "One MCP, many parsers. Routes between markitdown, Docling, and LlamaParse. Plus an interpret tool that pipes parsed markdown into Claude.",
   "author": {
-    "name": "Adelaida Diaz-Roa",
+    "name": "adelaidasofia",
     "url": "https://github.com/adelaidasofia"
   },
   "repository": {
