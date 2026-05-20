@@ -18,3 +18,5 @@ venv/
 # Cached parsed outputs / model weights
 .parse_cache/
 *.model
+# Generated MCP bundle (uploaded to GitHub Releases, not tracked in git)
+*.mcpb

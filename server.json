@@ -16,6 +16,7 @@
       "transport": {
         "type": "stdio"
       },
+      "fileSha256": "d197535ecba78a1a5c516238acdf3739ef397324f45b553c39d9990f2619ff6d",
       "environmentVariables": [
         {
           "name": "LLAMAPARSE_API_KEY",
