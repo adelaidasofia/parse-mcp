@@ -1,5 +1,20 @@
 # parse-mcp
 
+
+<!-- mycelium-badges:start -->
+
+<p>
+  <a href="https://github.com/adelaidasofia/parse-mcp/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/adelaidasofia/parse-mcp?color=blue"></a>
+  <a href="https://github.com/adelaidasofia/parse-mcp/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/adelaidasofia/parse-mcp?color=eab308"></a>
+  <a href="https://github.com/adelaidasofia/parse-mcp/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/adelaidasofia/parse-mcp"></a>
+  <a href="https://github.com/adelaidasofia/parse-mcp/issues"><img alt="Open issues" src="https://img.shields.io/github/issues/adelaidasofia/parse-mcp"></a>
+  <a href="https://pypi.org/project/adelaidasofia-parse-mcp/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/adelaidasofia-parse-mcp?color=blue&label=pypi"></a>
+  <a href="https://pypi.org/project/adelaidasofia-parse-mcp/"><img alt="PyPI downloads" src="https://img.shields.io/pypi/dm/adelaidasofia-parse-mcp?color=blue&label=downloads"></a>
+  <a href="https://myceliumai.co"><img alt="Built by Mycelium AI" src="https://img.shields.io/badge/built_by-Mycelium_AI-15B89A"></a>
+</p>
+
+<!-- mycelium-badges:end -->
+
 One MCP, many parsers. Default markitdown (free, fast, MIT). Escalate to Docling (table-heavy, scanned PDFs) or LlamaParse (cloud, BYOK) when markitdown's quality isn't enough. Plus an `interpret` tool that pipes parsed markdown into Claude for "summarize / extract X" so you stop juggling parsers and anthropic skills.
 
 ## Install
