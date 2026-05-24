@@ -343,5 +343,69 @@ def benchmark(source: str) -> dict:
     return {"results": [r.to_dict() for r in results], "filename": filename}
 
 
+@mcp.tool()
+def chunk_text(
+    text: str,
+    doc_type: str = "auto",
+    target_tokens: int = 400,
+    max_tokens: int = 800,
+    min_tokens: int = 50,
+) -> dict:
+    """Chunk a markdown document into retrieval-ready pieces.
+
+    Picks a doc-type-aware chunker (paper / book / manual / qa / resume
+    / table / default) based on document structure. Set `doc_type` to
+    force a specific chunker; default "auto" runs structural detection.
+
+    Args:
+        text: the markdown content to chunk. (To chunk a FILE, first
+            run `parse(source)` then pass `result["markdown"]` here.)
+        doc_type: "auto" | "paper" | "book" | "manual" | "qa" | "resume"
+            | "table" | "default". Default "auto".
+        target_tokens: target chunk size in whitespace-tokens (default 400).
+        max_tokens: hard cap before force-split (default 800).
+        min_tokens: undersize threshold for trailing-chunk merge (default 50).
+
+    Returns:
+        {
+          "doc_type": resolved doc_type (the chunker that ran),
+          "chunks": list of chunks, each with body / heading / doc_type /
+                    section_id / start_line / end_line / metadata,
+          "chunk_count": len(chunks),
+          "doc_types_available": list of all registered chunkers,
+        }
+    """
+    from chunkers import chunk_text as _chunk_text, list_doc_types  # noqa
+    from chunkers.base import ChunkConfig
+    from chunkers.dispatcher import list_doc_types as _list
+
+    cfg = ChunkConfig(
+        target_tokens=target_tokens,
+        max_tokens=max_tokens,
+        min_tokens=min_tokens,
+    )
+    chunks, resolved = _chunk_text(text, doc_type=doc_type, config=cfg)
+    return {
+        "doc_type": resolved,
+        "chunks": [c.to_dict() for c in chunks],
+        "chunk_count": len(chunks),
+        "doc_types_available": _list(),
+    }
+
+
+@mcp.tool()
+def detect_doc_type(text: str) -> dict:
+    """Run structural heuristics to detect document type.
+
+    Useful when you want to know what `chunk_text` would pick before
+    actually chunking. Returns the resolved doc_type token.
+    """
+    from chunkers.detect import detect_doc_type as _detect
+
+    if not text or not text.strip():
+        return {"doc_type": "default", "reason": "empty input"}
+    return {"doc_type": _detect(text)}
+
+
 if __name__ == "__main__":
     mcp.run()
