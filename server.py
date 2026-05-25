@@ -25,6 +25,9 @@ import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
+
+from mycelium_security import UnsafeURL, assert_public_ip, sanitize_or_raise
 
 # Ensure the bundled `backends/` package is importable when FastMCP
 # launches us via `python3 server.py` from elsewhere.
@@ -36,6 +39,27 @@ from fastmcp import FastMCP
 
 import router  # noqa: E402
 from interpret import interpret as _interpret  # noqa: E402
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Block all 3xx redirects (MYC-101 SSRF Layer 1).
+
+    A redirect from a validated public host to 169.254.169.254 (or any
+    private IP) would bypass the pre-fetch IP check, so refuse to follow.
+    """
+
+    def http_error_301(self, req, fp, code, msg, headers):
+        raise urllib.error.HTTPError(
+            req.full_url, code, "redirect blocked (SSRF mitigation)", headers, fp
+        )
+
+    http_error_302 = http_error_301
+    http_error_303 = http_error_301
+    http_error_307 = http_error_301
+    http_error_308 = http_error_301
+
+
+_OPENER = urllib.request.build_opener(_NoRedirectHandler())
 
 # 25 MB default ceiling. Override via env. Keeps the synchronous parse
 # path responsive and matches the memory-runtime-pro parse-layer ceiling
@@ -76,19 +100,31 @@ def _read_path(path: str) -> tuple[bytes | None, str, str | None]:
 
 
 def _read_url(url: str) -> tuple[bytes | None, str, str | None]:
-    """Fetch an HTTP(S) URL. Returns (data, filename, error)."""
+    """Fetch an HTTP(S) URL. Returns (data, filename, error).
+
+    SSRF mitigation (MYC-101):
+      1. sanitize_or_raise — reject dangerous chars / non-http(s) / embedded creds
+      2. assert_public_ip — reject private + cloud-metadata IPs (post-DNS)
+      3. _OPENER (NoRedirectHandler) — refuse 3xx redirects (would bypass step 2)
+    """
     if not (url.startswith("http://") or url.startswith("https://")):
         return None, url, "url must use http or https"
     filename = url.rsplit("/", 1)[-1] or "download"
+    try:
+        safe_url = sanitize_or_raise(url)
+        host = urlparse(safe_url).hostname or ""
+        assert_public_ip(host)
+    except UnsafeURL as exc:
+        return None, filename, f"refused (SSRF): {exc}"
     req = urllib.request.Request(
-        url,
+        safe_url,
         headers={
-            "User-Agent": "parse-mcp/1.0 (Mycelium AI)",
+            "User-Agent": "parse-mcp/1.0",
             "Accept": "*/*",
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with _OPENER.open(req, timeout=30) as resp:
             data = resp.read(_max_bytes() + 1)
             if len(data) > _max_bytes():
                 return None, filename, f"response exceeds PARSE_MCP_MAX_BYTES ({_max_bytes()} bytes)"
