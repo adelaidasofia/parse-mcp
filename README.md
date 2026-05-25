@@ -58,6 +58,8 @@ Then register the server in your client's `.mcp.json`:
 | `interpret(source, instruction, backend?, model?, max_tokens?)` | Parse first, then ask Claude over the parsed markdown. Cache hits reuse parsed text for free input tokens. |
 | `list_backends()` | Which backends are installed + which are missing. Diagnostic. |
 | `benchmark(source)` | Run every available backend on the same input. Compare latency + output side by side. |
+| `chunk_text(text, doc_type?, target_tokens?, max_tokens?, min_tokens?)` | Chunk parsed markdown into retrieval-ready pieces using a doc-type-aware chunker. `doc_type="auto"` (default) runs structural detection and picks one of paper / book / manual / qa / resume / table / default. Each chunker honors document shape (e.g., `paper` keeps the abstract whole; `manual` never merges across numbered sections; `qa` pairs each question with its answer). Returns chunks + the resolved doc_type. See `chunkers/` package. |
+| `detect_doc_type(text)` | Diagnostic. Run structural heuristics over markdown and return the doc_type that `chunk_text` would pick. |
 
 ## Backends (priority order)
 
