@@ -1,6 +1,6 @@
 [project]
 name = "parse-mcp"
-version = "0.1.0"
+version = "0.2.0"
 description = "One MCP, many parsers. Routes between markitdown, Docling, and LlamaParse. Plus an interpret tool that pipes parsed markdown into Claude."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -10,6 +10,9 @@ dependencies = [
     "fastmcp>=3.2.3",
     "anthropic>=0.40",
     "markitdown[pdf,docx,pptx,xlsx]>=0.0.1",
+    # SSRF hardening for outbound URL fetch (MYC-101).
+    # Flip to named PyPI dep when trusted publisher is configured.
+    "mycelium-security @ git+https://github.com/adelaidasofia/mycelium-security.git@v0.1.0",
 ]
 
 [project.optional-dependencies]
