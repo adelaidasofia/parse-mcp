@@ -1,4 +1,4 @@
-"""parse-mcp: best-of-the-best document parsing MCP for Adelaida + Mycelium clients.
+"""parse-mcp: best-of-the-best document parsing MCP for Mycelium AI clients.
 
 ONE tool surface, multiple deterministic backends behind it (markitdown
 default, Docling for tables/scanned, LlamaParse for visually-complex
@@ -222,7 +222,7 @@ def parse_to_vault(
     vault_root = Path(
         os.environ.get(
             "VAULT_ROOT",
-            str(Path.home() / "Desktop" / "Adelaida Notes"),
+            str(Path.home() / "vault"),
         )
     )
     if vault_folder:
