@@ -114,4 +114,4 @@ MIT. See `LICENSE`.
 
 ---
 
-Built by Adelaida Diaz-Roa. Full install or team version at [diazroa.com](https://diazroa.com).
+Full install or team version at [diazroa.com](https://diazroa.com).

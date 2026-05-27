@@ -58,11 +58,19 @@ def main() -> int:
 
     name = "no third-party personal names in committable source"
     try:
+        import json
         import re
-        BANNED = re.compile(
-            r"\b(Sergio|Diana|Paola|Beverly|Natalia|Silvia|Accenture|Centre415|vinitos)\b"
-            r"|High-Rise|After the Shock|tech@onde|🚀 Onde Team"
-        )
+        pattern_file = Path(__file__).parent / "banned-patterns.json"
+        with open(pattern_file, encoding="utf-8") as f:
+            patterns = json.load(f)["patterns"]
+        word_patterns = [p for p in patterns if not any(c in p for c in " -")]
+        phrase_patterns = [p for p in patterns if any(c in p for c in " -")]
+        regex_parts = [
+            r"\b(" + "|".join(re.escape(p) for p in word_patterns) + r")\b"
+        ]
+        if phrase_patterns:
+            regex_parts.extend(re.escape(p) for p in phrase_patterns)
+        BANNED = re.compile("|".join(regex_parts))
         hits = []
         for ext in ("*.py", "*.md", "*.toml"):
             for path in ROOT.rglob(ext):
