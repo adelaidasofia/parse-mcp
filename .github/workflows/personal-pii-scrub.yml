@@ -70,7 +70,7 @@ jobs:
               ':!*pyproject.toml' ':!*setup.py' ':!*setup.cfg' \
               ':!*package.json' ':!*Cargo.toml' ':!*manifest.json' \
               ':!.env.example' ':!*.env.example' \
-              ':!tests/integration/test_smoke.py' ':!tests/integration/banned-patterns.json' \
+              ':!tests/integration/test_smoke.py' \
               ':!vendor/' ':!node_modules/' ':!*.lock' \
               ':!package-lock.json' ':!pnpm-lock.yaml' \
               ':!.github/workflows/personal-pii-scrub.yml' 2>/dev/null || true)
