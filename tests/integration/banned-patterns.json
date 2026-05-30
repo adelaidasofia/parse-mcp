@@ -1,17 +1,14 @@
 {
+  "_comment": "Synthetic placeholder tokens ONLY. This is a shape fixture for the privacy self-test in test_smoke.py; it exercises both the word-pattern and phrase-pattern branches. It must never contain real personal data because this repository is public. Real personal-token leak detection runs centrally in .github/workflows/personal-pii-scrub.yml (auto-managed across all public repos).",
   "patterns": [
-    "Sergio",
-    "Diana",
-    "Paola",
-    "Beverly",
-    "Natalia",
-    "Silvia",
-    "Accenture",
-    "Centre415",
-    "vinitos",
-    "High-Rise",
-    "After the Shock",
-    "tech@onde",
-    "Onde Team"
+    "Examplepersonone",
+    "Examplepersontwo",
+    "Exampleclientcorp",
+    "Examplevenuename",
+    "examplecommunitytoken",
+    "noreply@example.invalid",
+    "Example Series Title",
+    "Example-Product-Name",
+    "Example Org Team"
   ]
 }
