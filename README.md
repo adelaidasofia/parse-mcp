@@ -73,6 +73,45 @@ Then register the server in your client's `.mcp.json`:
 - `parse(source, backend="docling")`: force a specific backend, no fallback. Diagnostic mode.
 - Unavailable backends are skipped (logged in the chain), never errored.
 
+## Parse-fidelity eval
+
+The routing table above used to be a guess. `tests/eval/` turns it into data: a
+synthetic fixture corpus (16 documents across digital PDF, scanned/image-only
+PDF, table-heavy, multi-column, and raster image classes) with derived
+ground-truth markdown, scored against each backend's output on three
+OmniDocBench / PubTabNet metrics — text edit distance, table **TEDS**
+(tree-edit-distance similarity), and reading-order. All scores are quality in
+[0, 1], higher is better.
+
+Headline result (full table: [`tests/eval/parse_fidelity_matrix.md`](tests/eval/parse_fidelity_matrix.md)):
+
+| doc-class | markitdown (text) | docling (text) |
+|---|---|---|
+| digital_pdf | 0.95 | 0.97 |
+| table_heavy | 0.93 | 0.89 |
+| scanned_pdf | **0.00** | 0.87 |
+| image | **0.00** | 0.90 |
+| multicolumn | 0.35 | 1.00 |
+
+markitdown is great on clean digital text and digital tables (free, fast,
+deterministic) but has **no OCR** — it scores zero on scanned PDFs and images —
+and it interleaves multi-column layouts. docling wins every class via OCR +
+layout analysis, at the cost of model-weight downloads. That is the evidence
+behind the format-preference chain (escalate image/scanned/multi-column to
+docling first).
+
+Run it:
+
+```bash
+pip install docling                      # the escalation backend under test
+python tests/eval/generate_fixtures.py   # rebuild the corpus (needs fpdf2 + Pillow)
+python tests/eval/score_parse_fidelity.py  # -> parse_fidelity_matrix.{md,json}
+```
+
+The scorer's metric tests are pure-Python and backend-free, so `pytest tests/`
+gates them in CI with only the base (markitdown) install — a routing regression
+that breaks the "markitdown has no OCR" assumption fails the build.
+
 ## Architecture
 
 FastMCP v3.2.3+, stdio transport, Python 3.13+. Registered in `[VAULT_ROOT]/.mcp.json`. No daemons, no listeners, no model weights downloaded by default.
