@@ -30,6 +30,7 @@ and reused across calls (the previous code rebuilt it per parse).
 from __future__ import annotations
 
 import io
+import logging
 import shutil
 import time
 from pathlib import Path
@@ -37,6 +38,8 @@ from pathlib import Path
 from backends.types import ParseResult
 
 NAME = "docling"
+
+logger = logging.getLogger(__name__)
 
 # Built lazily on first parse and reused — model load is expensive.
 _converter = None
@@ -53,6 +56,25 @@ def is_available() -> bool:
 def _ocr_engine() -> str:
     """Which OCR engine the tuned converter pins. See module docstring."""
     return "tesseract" if shutil.which("tesseract") else "auto"
+
+
+def _warn_if_ocr_degraded() -> bool:
+    """Log once if docling will fall back to a lower-fidelity OCR engine.
+
+    The fail-loud companion to the graceful Tesseract fallback in
+    ``_build_converter``. Without the ``tesseract`` binary, docling still
+    works but on a lower-fidelity engine than the parse-fidelity matrix
+    reports — a degraded config must announce itself, not silently lower
+    quality. Returns True when degraded.
+    """
+    if _ocr_engine() == "auto":
+        logger.warning(
+            "docling OCR running in degraded mode: 'tesseract' binary not found. "
+            "Scanned/image fidelity is lower than tests/eval/parse_fidelity_matrix.md "
+            "reports; install tesseract for best results (see SETUP.md)."
+        )
+        return True
+    return False
 
 
 def _build_converter():
@@ -72,6 +94,9 @@ def _build_converter():
         ImageFormatOption,
         PdfFormatOption,
     )
+
+    # docling is available here; warn if its OCR will run degraded (no tesseract).
+    _warn_if_ocr_degraded()
 
     opts = PdfPipelineOptions()
     opts.do_ocr = True
