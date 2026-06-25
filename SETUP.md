@@ -19,6 +19,15 @@ pip3 install --break-system-packages docling
 
 First parse downloads the layout + table-detection model weights (~500 MB). Subsequent parses reuse the cache. No env vars needed.
 
+**For best scanned/image OCR fidelity, also install the Tesseract binary.** Docling pins the Tesseract CLI when it is present — it scored highest on the parse-fidelity matrix (`tests/eval/parse_fidelity_matrix.md`: scanned text 0.915 vs ~0.87 on the auto-selected engine). Without it, Docling silently falls back to a lower-fidelity OCR engine and logs a `degraded mode` warning.
+
+```bash
+# macOS
+brew install tesseract
+# Debian / Ubuntu
+sudo apt-get install -y tesseract-ocr
+```
+
 ### LlamaParse (cloud, BYOK)
 
 ```bash
@@ -70,3 +79,4 @@ If both print OK, restart Claude Code. The `parse` server should appear in `clau
 - `<backend> not available` in `list_backends()`: backend's deps or env vars are missing. Install per the section above.
 - `input exceeds PARSE_MCP_MAX_BYTES`: bump the env var on the server registration. Default is 26214400 (25 MB).
 - Empty markdown but no error: format-specific markitdown extra is missing (e.g. parsed a PDF without `[pdf]`). Reinstall with the relevant extras.
+- `docling OCR running in degraded mode` warning: the Tesseract binary is missing. Install it (see the Docling section) for best scanned/image fidelity; Docling still works without it, just at lower OCR quality.
