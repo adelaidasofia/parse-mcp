@@ -1,0 +1,837 @@
+{
+  "evaluation": {
+    "backends": [
+      "markitdown",
+      "docling",
+      "llamaparse"
+    ],
+    "fixtures": [
+      {
+        "id": "memo_digital_pdf",
+        "doc_class": "digital_pdf",
+        "content": "prose",
+        "has_table": false,
+        "file": "memo_digital_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 471,
+            "scores": {
+              "text": 0.9955654101995566,
+              "table": null,
+              "reading_order": 1.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 470,
+            "scores": {
+              "text": 0.9977876106194691,
+              "table": null,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "memo_scanned_pdf",
+        "doc_class": "scanned_pdf",
+        "content": "prose",
+        "has_table": false,
+        "file": "memo_scanned_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 0,
+            "scores": {
+              "text": 0.0,
+              "table": null,
+              "reading_order": 0.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 415,
+            "scores": {
+              "text": 0.9090909090909091,
+              "table": null,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "memo_image_png",
+        "doc_class": "image",
+        "content": "prose",
+        "has_table": false,
+        "file": "memo_image_png.png",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 0,
+            "scores": {
+              "text": 0.0,
+              "table": null,
+              "reading_order": 0.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 453,
+            "scores": {
+              "text": 0.9933481152993349,
+              "table": null,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "memo_image_jpg",
+        "doc_class": "image",
+        "content": "prose",
+        "has_table": false,
+        "file": "memo_image_jpg.jpg",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 0,
+            "scores": {
+              "text": 0.0,
+              "table": null,
+              "reading_order": 0.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 392,
+            "scores": {
+              "text": 0.8381374722838137,
+              "table": null,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "financials_digital_pdf",
+        "doc_class": "table_heavy",
+        "content": "table",
+        "has_table": true,
+        "file": "financials_digital_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 438,
+            "scores": {
+              "text": 0.9277456647398844,
+              "table": 1.0,
+              "reading_order": 1.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 491,
+            "scores": {
+              "text": 0.8879551820728291,
+              "table": 1.0,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "financials_scanned_pdf",
+        "doc_class": "scanned_pdf",
+        "content": "table",
+        "has_table": true,
+        "file": "financials_scanned_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 0,
+            "scores": {
+              "text": 0.0,
+              "table": 0.0,
+              "reading_order": 0.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 482,
+            "scores": {
+              "text": 0.875,
+              "table": 0.9969135802469136,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "financials_image_png",
+        "doc_class": "image",
+        "content": "table",
+        "has_table": true,
+        "file": "financials_image_png.png",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 0,
+            "scores": {
+              "text": 0.0,
+              "table": 0.0,
+              "reading_order": 0.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 483,
+            "scores": {
+              "text": 0.8810198300283286,
+              "table": 0.9969135802469136,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "contract_digital_pdf",
+        "doc_class": "digital_pdf",
+        "content": "regulated",
+        "has_table": true,
+        "file": "contract_digital_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 589,
+            "scores": {
+              "text": 0.8557213930348259,
+              "table": 0.0,
+              "reading_order": 1.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 679,
+            "scores": {
+              "text": 0.944794952681388,
+              "table": 1.0,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "contract_scanned_pdf",
+        "doc_class": "scanned_pdf",
+        "content": "regulated",
+        "has_table": true,
+        "file": "contract_scanned_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 0,
+            "scores": {
+              "text": 0.0,
+              "table": 0.0,
+              "reading_order": 0.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 633,
+            "scores": {
+              "text": 0.8922056384742952,
+              "table": 0.9691043083900227,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "review_singlecol_pdf",
+        "doc_class": "digital_pdf",
+        "content": "multicolumn",
+        "has_table": false,
+        "file": "review_singlecol_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 811,
+            "scores": {
+              "text": 0.9973118279569892,
+              "table": null,
+              "reading_order": 1.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 779,
+            "scores": {
+              "text": 0.9986577181208054,
+              "table": null,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "review_multicolumn_pdf",
+        "doc_class": "multicolumn",
+        "content": "multicolumn",
+        "has_table": false,
+        "file": "review_multicolumn_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 816,
+            "scores": {
+              "text": 0.353494623655914,
+              "table": null,
+              "reading_order": 0.14285714285714285
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 790,
+            "scores": {
+              "text": 0.9986577181208054,
+              "table": null,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "invoice_digital_pdf",
+        "doc_class": "table_heavy",
+        "content": "table",
+        "has_table": true,
+        "file": "invoice_digital_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 477,
+            "scores": {
+              "text": 0.9254079254079254,
+              "table": 1.0,
+              "reading_order": 1.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 513,
+            "scores": {
+              "text": 0.8972602739726028,
+              "table": 1.0,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "invoice_scanned_pdf",
+        "doc_class": "scanned_pdf",
+        "content": "table",
+        "has_table": true,
+        "file": "invoice_scanned_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 0,
+            "scores": {
+              "text": 0.0,
+              "table": 0.0,
+              "reading_order": 0.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 583,
+            "scores": {
+              "text": 0.7830802603036876,
+              "table": 0.9418952519639019,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "invoice_image_png",
+        "doc_class": "image",
+        "content": "table",
+        "has_table": true,
+        "file": "invoice_image_png.png",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 0,
+            "scores": {
+              "text": 0.0,
+              "table": 0.0,
+              "reading_order": 0.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 478,
+            "scores": {
+              "text": 0.8862559241706162,
+              "table": 0.7904216995126085,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "research_digital_pdf",
+        "doc_class": "digital_pdf",
+        "content": "mixed",
+        "has_table": true,
+        "file": "research_digital_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 474,
+            "scores": {
+              "text": 0.9486607142857143,
+              "table": 1.0,
+              "reading_order": 1.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 510,
+            "scores": {
+              "text": 0.925601750547046,
+              "table": 1.0,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      },
+      {
+        "id": "research_scanned_pdf",
+        "doc_class": "scanned_pdf",
+        "content": "mixed",
+        "has_table": true,
+        "file": "research_scanned_pdf.pdf",
+        "results": {
+          "markitdown": {
+            "status": "ok",
+            "output_len": 0,
+            "scores": {
+              "text": 0.0,
+              "table": 0.0,
+              "reading_order": 0.0
+            }
+          },
+          "docling": {
+            "status": "ok",
+            "output_len": 495,
+            "scores": {
+              "text": 0.8820861678004535,
+              "table": 0.9957264957264957,
+              "reading_order": 1.0
+            }
+          },
+          "llamaparse": {
+            "status": "unavailable",
+            "output_len": 0,
+            "scores": null
+          }
+        }
+      }
+    ]
+  },
+  "aggregate": {
+    "classes": [
+      "digital_pdf",
+      "scanned_pdf",
+      "image",
+      "table_heavy",
+      "multicolumn"
+    ],
+    "by_class": {
+      "digital_pdf": {
+        "markitdown": {
+          "text": [
+            0.9493148363692715,
+            4
+          ],
+          "table": [
+            0.5,
+            2
+          ],
+          "reading_order": [
+            1.0,
+            4
+          ]
+        },
+        "docling": {
+          "text": [
+            0.9667105079921772,
+            4
+          ],
+          "table": [
+            1.0,
+            2
+          ],
+          "reading_order": [
+            1.0,
+            4
+          ]
+        },
+        "llamaparse": {
+          "text": [
+            null,
+            0
+          ],
+          "table": [
+            null,
+            0
+          ],
+          "reading_order": [
+            null,
+            0
+          ]
+        }
+      },
+      "scanned_pdf": {
+        "markitdown": {
+          "text": [
+            0.0,
+            5
+          ],
+          "table": [
+            0.0,
+            4
+          ],
+          "reading_order": [
+            0.0,
+            5
+          ]
+        },
+        "docling": {
+          "text": [
+            0.868292595133869,
+            5
+          ],
+          "table": [
+            0.9759099090818335,
+            4
+          ],
+          "reading_order": [
+            1.0,
+            5
+          ]
+        },
+        "llamaparse": {
+          "text": [
+            null,
+            0
+          ],
+          "table": [
+            null,
+            0
+          ],
+          "reading_order": [
+            null,
+            0
+          ]
+        }
+      },
+      "image": {
+        "markitdown": {
+          "text": [
+            0.0,
+            4
+          ],
+          "table": [
+            0.0,
+            2
+          ],
+          "reading_order": [
+            0.0,
+            4
+          ]
+        },
+        "docling": {
+          "text": [
+            0.8996903354455233,
+            4
+          ],
+          "table": [
+            0.893667639879761,
+            2
+          ],
+          "reading_order": [
+            1.0,
+            4
+          ]
+        },
+        "llamaparse": {
+          "text": [
+            null,
+            0
+          ],
+          "table": [
+            null,
+            0
+          ],
+          "reading_order": [
+            null,
+            0
+          ]
+        }
+      },
+      "table_heavy": {
+        "markitdown": {
+          "text": [
+            0.9265767950739049,
+            2
+          ],
+          "table": [
+            1.0,
+            2
+          ],
+          "reading_order": [
+            1.0,
+            2
+          ]
+        },
+        "docling": {
+          "text": [
+            0.8926077280227159,
+            2
+          ],
+          "table": [
+            1.0,
+            2
+          ],
+          "reading_order": [
+            1.0,
+            2
+          ]
+        },
+        "llamaparse": {
+          "text": [
+            null,
+            0
+          ],
+          "table": [
+            null,
+            0
+          ],
+          "reading_order": [
+            null,
+            0
+          ]
+        }
+      },
+      "multicolumn": {
+        "markitdown": {
+          "text": [
+            0.353494623655914,
+            1
+          ],
+          "table": [
+            null,
+            0
+          ],
+          "reading_order": [
+            0.14285714285714285,
+            1
+          ]
+        },
+        "docling": {
+          "text": [
+            0.9986577181208054,
+            1
+          ],
+          "table": [
+            null,
+            0
+          ],
+          "reading_order": [
+            1.0,
+            1
+          ]
+        },
+        "llamaparse": {
+          "text": [
+            null,
+            0
+          ],
+          "table": [
+            null,
+            0
+          ],
+          "reading_order": [
+            null,
+            0
+          ]
+        }
+      }
+    },
+    "overall": {
+      "markitdown": {
+        "text": [
+          0.3752442224550506,
+          16
+        ],
+        "table": [
+          0.3,
+          10
+        ],
+        "reading_order": [
+          0.38392857142857145,
+          16
+        ]
+      },
+      "docling": {
+        "text": [
+          0.911933720224149,
+          16
+        ],
+        "table": [
+          0.9690974916086856,
+          10
+        ],
+        "reading_order": [
+          1.0,
+          16
+        ]
+      },
+      "llamaparse": {
+        "text": [
+          null,
+          0
+        ],
+        "table": [
+          null,
+          0
+        ],
+        "reading_order": [
+          null,
+          0
+        ]
+      }
+    }
+  },
+  "findings": {
+    "best_per_class": {
+      "digital_pdf": {
+        "winner": "docling",
+        "composites": {
+          "markitdown": 0.8164382787897572,
+          "docling": 0.988903502664059
+        }
+      },
+      "scanned_pdf": {
+        "winner": "docling",
+        "composites": {
+          "markitdown": 0.0,
+          "docling": 0.9480675014052342
+        }
+      },
+      "image": {
+        "winner": "docling",
+        "composites": {
+          "markitdown": 0.0,
+          "docling": 0.9311193251084281
+        }
+      },
+      "table_heavy": {
+        "winner": "markitdown",
+        "composites": {
+          "markitdown": 0.9755255983579683,
+          "docling": 0.964202576007572
+        }
+      },
+      "multicolumn": {
+        "winner": "docling",
+        "composites": {
+          "markitdown": 0.24817588325652842,
+          "docling": 0.9993288590604027
+        }
+      }
+    }
+  }
+}

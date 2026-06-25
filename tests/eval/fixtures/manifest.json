@@ -1,0 +1,166 @@
+{
+  "generated_by": "tests/eval/generate_fixtures.py",
+  "note": "Synthetic parse-fidelity corpus. Ground truth is derived from the same model that renders each fixture, so they cannot drift. Regenerate with: python tests/eval/generate_fixtures.py",
+  "fixtures": [
+    {
+      "id": "memo_digital_pdf",
+      "file": "memo_digital_pdf.pdf",
+      "doc_class": "digital_pdf",
+      "content": "prose",
+      "has_table": false,
+      "render": "text_pdf",
+      "source_doc": "office_memo",
+      "ground_truth": "ground_truth/office_memo.md"
+    },
+    {
+      "id": "memo_scanned_pdf",
+      "file": "memo_scanned_pdf.pdf",
+      "doc_class": "scanned_pdf",
+      "content": "prose",
+      "has_table": false,
+      "render": "image_pdf",
+      "source_doc": "office_memo",
+      "ground_truth": "ground_truth/office_memo.md"
+    },
+    {
+      "id": "memo_image_png",
+      "file": "memo_image_png.png",
+      "doc_class": "image",
+      "content": "prose",
+      "has_table": false,
+      "render": "png",
+      "source_doc": "office_memo",
+      "ground_truth": "ground_truth/office_memo.md"
+    },
+    {
+      "id": "memo_image_jpg",
+      "file": "memo_image_jpg.jpg",
+      "doc_class": "image",
+      "content": "prose",
+      "has_table": false,
+      "render": "jpg",
+      "source_doc": "office_memo",
+      "ground_truth": "ground_truth/office_memo.md"
+    },
+    {
+      "id": "financials_digital_pdf",
+      "file": "financials_digital_pdf.pdf",
+      "doc_class": "table_heavy",
+      "content": "table",
+      "has_table": true,
+      "render": "text_pdf",
+      "source_doc": "quarterly_financials",
+      "ground_truth": "ground_truth/quarterly_financials.md"
+    },
+    {
+      "id": "financials_scanned_pdf",
+      "file": "financials_scanned_pdf.pdf",
+      "doc_class": "scanned_pdf",
+      "content": "table",
+      "has_table": true,
+      "render": "image_pdf",
+      "source_doc": "quarterly_financials",
+      "ground_truth": "ground_truth/quarterly_financials.md"
+    },
+    {
+      "id": "financials_image_png",
+      "file": "financials_image_png.png",
+      "doc_class": "image",
+      "content": "table",
+      "has_table": true,
+      "render": "png",
+      "source_doc": "quarterly_financials",
+      "ground_truth": "ground_truth/quarterly_financials.md"
+    },
+    {
+      "id": "contract_digital_pdf",
+      "file": "contract_digital_pdf.pdf",
+      "doc_class": "digital_pdf",
+      "content": "regulated",
+      "has_table": true,
+      "render": "text_pdf",
+      "source_doc": "procurement_contract",
+      "ground_truth": "ground_truth/procurement_contract.md"
+    },
+    {
+      "id": "contract_scanned_pdf",
+      "file": "contract_scanned_pdf.pdf",
+      "doc_class": "scanned_pdf",
+      "content": "regulated",
+      "has_table": true,
+      "render": "image_pdf",
+      "source_doc": "procurement_contract",
+      "ground_truth": "ground_truth/procurement_contract.md"
+    },
+    {
+      "id": "review_singlecol_pdf",
+      "file": "review_singlecol_pdf.pdf",
+      "doc_class": "digital_pdf",
+      "content": "multicolumn",
+      "has_table": false,
+      "render": "text_pdf",
+      "source_doc": "engineering_review",
+      "ground_truth": "ground_truth/engineering_review.md"
+    },
+    {
+      "id": "review_multicolumn_pdf",
+      "file": "review_multicolumn_pdf.pdf",
+      "doc_class": "multicolumn",
+      "content": "multicolumn",
+      "has_table": false,
+      "render": "multicol_pdf",
+      "source_doc": "engineering_review",
+      "ground_truth": "ground_truth/engineering_review.md"
+    },
+    {
+      "id": "invoice_digital_pdf",
+      "file": "invoice_digital_pdf.pdf",
+      "doc_class": "table_heavy",
+      "content": "table",
+      "has_table": true,
+      "render": "text_pdf",
+      "source_doc": "vendor_invoice",
+      "ground_truth": "ground_truth/vendor_invoice.md"
+    },
+    {
+      "id": "invoice_scanned_pdf",
+      "file": "invoice_scanned_pdf.pdf",
+      "doc_class": "scanned_pdf",
+      "content": "table",
+      "has_table": true,
+      "render": "image_pdf",
+      "source_doc": "vendor_invoice",
+      "ground_truth": "ground_truth/vendor_invoice.md"
+    },
+    {
+      "id": "invoice_image_png",
+      "file": "invoice_image_png.png",
+      "doc_class": "image",
+      "content": "table",
+      "has_table": true,
+      "render": "png",
+      "source_doc": "vendor_invoice",
+      "ground_truth": "ground_truth/vendor_invoice.md"
+    },
+    {
+      "id": "research_digital_pdf",
+      "file": "research_digital_pdf.pdf",
+      "doc_class": "digital_pdf",
+      "content": "mixed",
+      "has_table": true,
+      "render": "text_pdf",
+      "source_doc": "research_note",
+      "ground_truth": "ground_truth/research_note.md"
+    },
+    {
+      "id": "research_scanned_pdf",
+      "file": "research_scanned_pdf.pdf",
+      "doc_class": "scanned_pdf",
+      "content": "mixed",
+      "has_table": true,
+      "render": "image_pdf",
+      "source_doc": "research_note",
+      "ground_truth": "ground_truth/research_note.md"
+    }
+  ]
+}
