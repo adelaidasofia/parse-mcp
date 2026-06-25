@@ -105,8 +105,14 @@ Run it:
 ```bash
 pip install docling                      # the escalation backend under test
 python tests/eval/generate_fixtures.py   # rebuild the corpus (needs fpdf2 + Pillow)
-python tests/eval/score_parse_fidelity.py  # -> parse_fidelity_matrix.{md,json}
+make eval                                # -> parse_fidelity_matrix.{md,json}
 ```
+
+The matrix records its **provenance** (backend + python versions + a fixture-set
+hash), so a stale result is visible — regenerate with `make eval` whenever a
+parse backend is upgraded or retuned. It also reports **median latency** per
+backend (the cost axis): the highest-fidelity backend (docling) is far slower
+than the default, so the router escalates to it rather than defaulting to it.
 
 The scorer's metric tests are pure-Python and backend-free, so `pytest tests/`
 gates them in CI with only the base (markitdown) install — a routing regression
