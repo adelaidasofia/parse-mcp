@@ -13,3 +13,12 @@ ci:
 .PHONY: eval
 eval:
 	python tests/eval/score_parse_fidelity.py
+
+# Run the parse-fidelity FLOOR gate locally (MYC-1793) — the same command CI
+# runs (.github/workflows/parse-fidelity-floor.yml). Asserts a fresh docling
+# run holds the committed baseline per doc-class. Needs docling + tesseract:
+#   pip install -r requirements-docling.txt   (CPU torch index, see the file)
+#   brew install tesseract  /  apt-get install -y tesseract-ocr
+.PHONY: fidelity
+fidelity:
+	python tests/eval/fidelity_floor.py --backend docling

@@ -1,0 +1,154 @@
+name: parse-fidelity-floor
+# MYC-1793: gate the inference path. The MYC-1670 fidelity eval exists but does
+# not BITE — base CI (test.yml) runs the scorer's pure-Python tests under a
+# markitdown-only install, so a docling/markitdown bump can change OCR /
+# TableFormer behaviour and ship with every check still green. This workflow
+# installs the pinned docling + Tesseract, re-scores the committed 16-fixture
+# corpus, and FAILS if any doc-class text/table drops below the committed
+# baseline minus epsilon. Two negative controls prove it is not vacuous.
+#
+# NOT auto-managed by gh-harden-repos.sh — this is a hand-maintained gate.
+# Make it a REQUIRED status check on main so a docling/markitdown bump cannot
+# auto-merge (AUTO_PATCH tier) until the floor holds.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Cancel superseded PR runs; let main runs complete (the required-check
+# baseline). github.workflow + github.ref are system-generated, not
+# user-controlled, so no injection surface.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  fidelity-floor:
+    name: fidelity-floor
+    runs-on: ubuntu-latest
+    # docling model load + 16 conversions is a few minutes; ceiling well above.
+    timeout-minutes: 30
+
+    # System-generated SHAs captured via env (not inlined into run: blocks) per
+    # GitHub Actions injection hardening — uniform with the relevance check.
+    env:
+      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      PUSH_BEFORE_SHA: ${{ github.event.before }}
+      EVENT_NAME: ${{ github.event_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need merge-base for the relevance diff
+
+      # The heavy docling steps run ONLY when a PR touches the parse pipeline,
+      # the fidelity eval, or a parse-critical dependency (docling/markitdown
+      # bumps land in requirements-docling.txt / requirements.txt / pyproject).
+      # The job still completes + posts SUCCESS otherwise, so it can be a
+      # REQUIRED status check that never blocks an unrelated PR. Fail-open: any
+      # ambiguity in resolving the diff => treat as relevant (run the gate).
+      - name: Detect parse-surface changes
+        id: relevance
+        run: |
+          if [ "$EVENT_NAME" = "push" ]; then
+            BASE_SHA="$PUSH_BEFORE_SHA"
+            if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ] || [ -z "$BASE_SHA" ]; then
+              echo "::notice::Initial/!resolvable push SHA; failing open (relevant)."
+              echo "relevant=true" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+          else
+            BASE_SHA=$(git merge-base "$PR_BASE_SHA" HEAD 2>/dev/null || echo "")
+          fi
+          if [ -z "$BASE_SHA" ]; then
+            echo "::notice::No base SHA; failing open (relevant)."
+            echo "relevant=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if ! CHANGED=$(git diff --name-only "$BASE_SHA"..HEAD 2>/dev/null); then
+            echo "::notice::git diff failed; failing open (relevant)."
+            echo "relevant=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # Parse-fidelity-critical surfaces: the pipeline, the eval/gate, and
+          # the dependency manifests a docling/markitdown/torch bump touches.
+          PARSE_RE='^(requirements(-docling)?\.txt|pyproject\.toml|router\.py|interpret\.py|server\.py|backends/|tests/eval/|\.github/workflows/parse-fidelity-floor\.yml)'
+          if echo "$CHANGED" | grep -qE "$PARSE_RE"; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Parse-surface change detected; running the fidelity floor."
+          else
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No parse-surface change; floor not required for this PR."
+          fi
+
+      - name: Set up Python
+        if: steps.relevance.outputs.relevant == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13' # docling/onnxruntime have no 3.14 wheel yet
+
+      # Cache docling + HuggingFace model weights (TableFormer + layout, ~0.5 GB)
+      # keyed on the docling pin, so only a docling bump re-downloads — the
+      # conversion itself is then CPU + no-network, as the eval is meant to be.
+      - name: Cache docling model weights
+        if: steps.relevance.outputs.relevant == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/docling
+            ~/.cache/huggingface
+          key: docling-weights-${{ hashFiles('requirements-docling.txt') }}
+
+      - name: Install package + pinned docling (CPU torch)
+        if: steps.relevance.outputs.relevant == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install --extra-index-url https://download.pytorch.org/whl/cpu \
+            -r requirements-docling.txt
+
+      # NEGATIVE CONTROL 1 (deterministic): markitdown has no OCR, so it scores
+      # ~0 on scanned/image and MUST fail the DOCLING floor. Gated against the
+      # docling baseline (--baseline-backend docling) — comparing markitdown to
+      # its own ~0 column would be vacuous. No flaky OCR-engine dependency.
+      - name: 'Negative control 1: markitdown must FAIL the docling floor'
+        if: steps.relevance.outputs.relevant == 'true'
+        run: |
+          if python tests/eval/fidelity_floor.py --backend markitdown --baseline-backend docling; then
+            echo "::error::markitdown cleared the docling floor — gate is VACUOUS."
+            exit 1
+          fi
+          echo "OK: markitdown correctly failed the docling floor."
+
+      # NEGATIVE CONTROL 2 (real detune): docling with Tesseract NOT yet
+      # installed degrades to a weaker OCR engine (or errors on OCR), dropping
+      # scanned/image text below the floor. Proves the gate is sensitive to a
+      # real OCR regression — the "Tesseract removed" case from MYC-1793.
+      - name: 'Negative control 2: docling without Tesseract must FAIL the floor'
+        if: steps.relevance.outputs.relevant == 'true'
+        run: |
+          if python tests/eval/fidelity_floor.py --backend docling; then
+            echo "::error::Floor PASSED with Tesseract removed — gate not OCR-sensitive."
+            exit 1
+          fi
+          echo "OK: docling-without-Tesseract correctly failed the floor."
+
+      - name: Install Tesseract OCR
+        if: steps.relevance.outputs.relevant == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr
+
+      # THE GATE: docling + Tesseract (the validated pipeline) must hold the
+      # committed baseline. A docling/markitdown bump that regresses fidelity
+      # fails here and cannot merge.
+      - name: Fidelity floor — docling + Tesseract must PASS
+        if: steps.relevance.outputs.relevant == 'true'
+        run: python tests/eval/fidelity_floor.py --backend docling
+
+      - name: Not a parse-surface change
+        if: steps.relevance.outputs.relevant != 'true'
+        run: echo "No parse-surface changes; fidelity floor not required for this PR."
