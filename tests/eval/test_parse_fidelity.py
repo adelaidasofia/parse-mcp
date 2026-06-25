@@ -289,3 +289,19 @@ def test_evaluate_and_aggregate_emit_latency():
     assert "latency_ms" in res["fixtures"][0]["results"]["markitdown"]
     agg = aggregate(res)
     assert "markitdown" in agg["latency"]["overall"]
+
+
+def test_provenance_records_docling_ocr_engine():
+    # Anti-rot (MYC-1671): docling's scanned/image fidelity depends on its OCR
+    # engine, so the matrix records which engine produced the docling column.
+    # Asserts the relationship (engine is recorded + a valid value), not a
+    # literal — the resolved engine differs by host (tesseract binary present
+    # or not) and must not be a change-detector.
+    res = evaluate(_FIXTURES, backends=["markitdown", "docling"])
+    assert res["provenance"]["docling_ocr_engine"] in {"tesseract", "auto"}
+
+
+def test_provenance_omits_ocr_engine_when_docling_not_run():
+    # A markitdown-only run never touches docling, so it records no OCR engine.
+    res = evaluate(_FIXTURES, backends=["markitdown"])
+    assert "docling_ocr_engine" not in res["provenance"]
