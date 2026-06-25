@@ -1,0 +1,19 @@
+# Fidelity-validated docling pin for the parse-fidelity gate (MYC-1793).
+#
+# docling is an OPTIONAL backend (pyproject [project.optional-dependencies]).
+# Operators install whatever version they need; this file does NOT constrain
+# them. It pins the version the committed parse-fidelity matrix
+# (tests/eval/parse_fidelity_matrix.json) was generated against, and the
+# version the CI fidelity gate (.github/workflows/parse-fidelity-floor.yml)
+# installs to prove a bump did not regress text/table fidelity before merge.
+#
+# PINNED ==2.93.0: the Tesseract-CLI OCR tuning (backends/docling_backend.py)
+# is validated only on docling 2.93.0 (scanned 0.915 / image 0.941 text).
+# A docling bump is a PRODUCTION inference-path change ("A Model Swap Is a
+# Production Change — Gate the Inference Path") — dependabot bumps THIS pin,
+# the fidelity gate re-scores the 16-fixture corpus, and the bump merges only
+# if it holds the floor. `==`, not `>=`, so the gate tests an exact engine.
+#
+# CPU torch (pulled transitively) resolves from the PyTorch CPU index; the
+# workflow installs with --extra-index-url https://download.pytorch.org/whl/cpu.
+docling==2.93.0
