@@ -480,12 +480,24 @@ def _provenance(fixtures_dir, backends) -> dict:
     for fx in sorted(manifest["fixtures"], key=lambda x: x["id"]):
         digest.update((fixtures_dir / fx["file"]).read_bytes())
         digest.update((fixtures_dir / fx["ground_truth"]).read_bytes())
-    return {
+    prov = {
         "python": platform.python_version(),
         "backend_versions": {b: _backend_version(b) for b in backends},
         "fixture_set_sha256": digest.hexdigest()[:16],
         "n_fixtures": len(manifest["fixtures"]),
     }
+    # docling's scanned/image fidelity depends on which OCR engine it uses
+    # (Tesseract CLI when the binary is present, else docling's default), so
+    # the engine is part of what produced this matrix. Record it — a regen on
+    # a host with a different OCR engine available would otherwise shift the
+    # docling column silently (MYC-1671). Engine probe needs no docling import.
+    if "docling" in backends:
+        try:
+            from backends import docling_backend
+            prov["docling_ocr_engine"] = docling_backend._ocr_engine()
+        except Exception:
+            prov["docling_ocr_engine"] = None
+    return prov
 
 
 def _run_one_backend(name: str, data: bytes, filename: str):
@@ -652,11 +664,13 @@ def _provenance_line(evaluation: dict) -> str:
     prov = evaluation.get("provenance") or {}
     versions = prov.get("backend_versions", {})
     vstr = ", ".join(f"{b} {v}" for b, v in versions.items() if v) or "n/a"
+    ocr = prov.get("docling_ocr_engine")
+    ocr_str = f" · docling OCR: {ocr}" if ocr else ""
     return (
-        f"**Provenance.** python {prov.get('python', '?')} · backends: {vstr} · "
+        f"**Provenance.** python {prov.get('python', '?')} · backends: {vstr}{ocr_str} · "
         f"fixture-set `{prov.get('fixture_set_sha256', '?')}` "
         f"({prov.get('n_fixtures', '?')} docs). Regenerate when any backend "
-        "version changes — a stale matrix lies silently."
+        "version or the docling OCR engine changes — a stale matrix lies silently."
     )
 
 

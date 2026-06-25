@@ -16,7 +16,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 471,
-            "latency_ms": 18,
+            "latency_ms": 161,
             "scores": {
               "text": 0.9955654101995566,
               "table": null,
@@ -26,7 +26,7 @@
           "docling": {
             "status": "ok",
             "output_len": 470,
-            "latency_ms": 2615,
+            "latency_ms": 12600,
             "scores": {
               "text": 0.9977876106194691,
               "table": null,
@@ -51,7 +51,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 0,
-            "latency_ms": 9,
+            "latency_ms": 32,
             "scores": {
               "text": 0.0,
               "table": null,
@@ -60,10 +60,10 @@
           },
           "docling": {
             "status": "ok",
-            "output_len": 415,
-            "latency_ms": 1841,
+            "output_len": 455,
+            "latency_ms": 2406,
             "scores": {
-              "text": 0.9090909090909091,
+              "text": 0.9977876106194691,
               "table": null,
               "reading_order": 1.0
             }
@@ -86,7 +86,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 0,
-            "latency_ms": 8,
+            "latency_ms": 20,
             "scores": {
               "text": 0.0,
               "table": null,
@@ -95,10 +95,10 @@
           },
           "docling": {
             "status": "ok",
-            "output_len": 453,
-            "latency_ms": 1575,
+            "output_len": 455,
+            "latency_ms": 2291,
             "scores": {
-              "text": 0.9933481152993349,
+              "text": 0.9977876106194691,
               "table": null,
               "reading_order": 1.0
             }
@@ -121,7 +121,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 0,
-            "latency_ms": 8,
+            "latency_ms": 21,
             "scores": {
               "text": 0.0,
               "table": null,
@@ -130,10 +130,10 @@
           },
           "docling": {
             "status": "ok",
-            "output_len": 392,
-            "latency_ms": 1519,
+            "output_len": 455,
+            "latency_ms": 2944,
             "scores": {
-              "text": 0.8381374722838137,
+              "text": 0.9977876106194691,
               "table": null,
               "reading_order": 1.0
             }
@@ -156,7 +156,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 438,
-            "latency_ms": 22,
+            "latency_ms": 40,
             "scores": {
               "text": 0.9277456647398844,
               "table": 1.0,
@@ -166,7 +166,7 @@
           "docling": {
             "status": "ok",
             "output_len": 491,
-            "latency_ms": 1612,
+            "latency_ms": 4343,
             "scores": {
               "text": 0.8879551820728291,
               "table": 1.0,
@@ -191,7 +191,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 0,
-            "latency_ms": 7,
+            "latency_ms": 28,
             "scores": {
               "text": 0.0,
               "table": 0.0,
@@ -200,11 +200,11 @@
           },
           "docling": {
             "status": "ok",
-            "output_len": 482,
-            "latency_ms": 1892,
+            "output_len": 491,
+            "latency_ms": 4955,
             "scores": {
-              "text": 0.875,
-              "table": 0.9969135802469136,
+              "text": 0.8879551820728291,
+              "table": 1.0,
               "reading_order": 1.0
             }
           },
@@ -226,7 +226,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 0,
-            "latency_ms": 7,
+            "latency_ms": 31,
             "scores": {
               "text": 0.0,
               "table": 0.0,
@@ -235,11 +235,11 @@
           },
           "docling": {
             "status": "ok",
-            "output_len": 483,
-            "latency_ms": 2464,
+            "output_len": 491,
+            "latency_ms": 4513,
             "scores": {
-              "text": 0.8810198300283286,
-              "table": 0.9969135802469136,
+              "text": 0.8879551820728291,
+              "table": 1.0,
               "reading_order": 1.0
             }
           },
@@ -261,7 +261,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 589,
-            "latency_ms": 25,
+            "latency_ms": 48,
             "scores": {
               "text": 0.8557213930348259,
               "table": 0.0,
@@ -271,7 +271,7 @@
           "docling": {
             "status": "ok",
             "output_len": 679,
-            "latency_ms": 1401,
+            "latency_ms": 1037,
             "scores": {
               "text": 0.944794952681388,
               "table": 1.0,
@@ -296,7 +296,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 0,
-            "latency_ms": 10,
+            "latency_ms": 27,
             "scores": {
               "text": 0.0,
               "table": 0.0,
@@ -305,11 +305,11 @@
           },
           "docling": {
             "status": "ok",
-            "output_len": 633,
-            "latency_ms": 2342,
+            "output_len": 667,
+            "latency_ms": 2195,
             "scores": {
-              "text": 0.8922056384742952,
-              "table": 0.9691043083900227,
+              "text": 0.944794952681388,
+              "table": 1.0,
               "reading_order": 1.0
             }
           },
@@ -331,7 +331,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 811,
-            "latency_ms": 29,
+            "latency_ms": 55,
             "scores": {
               "text": 0.9973118279569892,
               "table": null,
@@ -341,7 +341,7 @@
           "docling": {
             "status": "ok",
             "output_len": 779,
-            "latency_ms": 1192,
+            "latency_ms": 699,
             "scores": {
               "text": 0.9986577181208054,
               "table": null,
@@ -366,7 +366,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 816,
-            "latency_ms": 22,
+            "latency_ms": 51,
             "scores": {
               "text": 0.353494623655914,
               "table": null,
@@ -376,7 +376,7 @@
           "docling": {
             "status": "ok",
             "output_len": 790,
-            "latency_ms": 1448,
+            "latency_ms": 542,
             "scores": {
               "text": 0.9986577181208054,
               "table": null,
@@ -401,7 +401,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 477,
-            "latency_ms": 15,
+            "latency_ms": 59,
             "scores": {
               "text": 0.9254079254079254,
               "table": 1.0,
@@ -411,7 +411,7 @@
           "docling": {
             "status": "ok",
             "output_len": 513,
-            "latency_ms": 1642,
+            "latency_ms": 2205,
             "scores": {
               "text": 0.8972602739726028,
               "table": 1.0,
@@ -436,7 +436,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 0,
-            "latency_ms": 11,
+            "latency_ms": 28,
             "scores": {
               "text": 0.0,
               "table": 0.0,
@@ -445,11 +445,11 @@
           },
           "docling": {
             "status": "ok",
-            "output_len": 583,
-            "latency_ms": 2649,
+            "output_len": 604,
+            "latency_ms": 1812,
             "scores": {
-              "text": 0.7830802603036876,
-              "table": 0.9418952519639019,
+              "text": 0.8200836820083682,
+              "table": 0.9545454545454546,
               "reading_order": 1.0
             }
           },
@@ -471,7 +471,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 0,
-            "latency_ms": 9,
+            "latency_ms": 11,
             "scores": {
               "text": 0.0,
               "table": 0.0,
@@ -480,10 +480,10 @@
           },
           "docling": {
             "status": "ok",
-            "output_len": 478,
-            "latency_ms": 2315,
+            "output_len": 477,
+            "latency_ms": 1972,
             "scores": {
-              "text": 0.8862559241706162,
+              "text": 0.8812351543942993,
               "table": 0.7904216995126085,
               "reading_order": 1.0
             }
@@ -506,7 +506,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 474,
-            "latency_ms": 21,
+            "latency_ms": 26,
             "scores": {
               "text": 0.9486607142857143,
               "table": 1.0,
@@ -516,7 +516,7 @@
           "docling": {
             "status": "ok",
             "output_len": 510,
-            "latency_ms": 1412,
+            "latency_ms": 865,
             "scores": {
               "text": 0.925601750547046,
               "table": 1.0,
@@ -541,7 +541,7 @@
           "markitdown": {
             "status": "ok",
             "output_len": 0,
-            "latency_ms": 7,
+            "latency_ms": 16,
             "scores": {
               "text": 0.0,
               "table": 0.0,
@@ -550,11 +550,11 @@
           },
           "docling": {
             "status": "ok",
-            "output_len": 495,
-            "latency_ms": 1971,
+            "output_len": 510,
+            "latency_ms": 1996,
             "scores": {
-              "text": 0.8820861678004535,
-              "table": 0.9957264957264957,
+              "text": 0.925601750547046,
+              "table": 1.0,
               "reading_order": 1.0
             }
           },
@@ -575,7 +575,8 @@
         "llamaparse": null
       },
       "fixture_set_sha256": "a9156634583f6b60",
-      "n_fixtures": 16
+      "n_fixtures": 16,
+      "docling_ocr_engine": "tesseract"
     }
   },
   "aggregate": {
@@ -648,11 +649,11 @@
         },
         "docling": {
           "text": [
-            0.868292595133869,
+            0.9152446355858201,
             5
           ],
           "table": [
-            0.9759099090818335,
+            0.9886363636363636,
             4
           ],
           "reading_order": [
@@ -692,11 +693,11 @@
         },
         "docling": {
           "text": [
-            0.8996903354455233,
+            0.9411913894265167,
             4
           ],
           "table": [
-            0.893667639879761,
+            0.8952108497563043,
             2
           ],
           "reading_order": [
@@ -825,11 +826,11 @@
       },
       "docling": {
         "text": [
-          0.911933720224149,
+          0.936981496360632,
           16
         ],
         "table": [
-          0.9690974916086856,
+          0.9744967154058063,
           10
         ],
         "reading_order": [
@@ -854,34 +855,34 @@
     },
     "latency": {
       "overall": {
-        "markitdown": 10.5,
-        "docling": 1741.5,
+        "markitdown": 29.5,
+        "docling": 2200.0,
         "llamaparse": null
       },
       "by_class": {
         "digital_pdf": {
-          "markitdown": 23.0,
-          "docling": 1406.5,
+          "markitdown": 51.5,
+          "docling": 951.0,
           "llamaparse": null
         },
         "scanned_pdf": {
-          "markitdown": 9,
-          "docling": 1971,
+          "markitdown": 28,
+          "docling": 2195,
           "llamaparse": null
         },
         "image": {
-          "markitdown": 8.0,
-          "docling": 1945.0,
+          "markitdown": 20.5,
+          "docling": 2617.5,
           "llamaparse": null
         },
         "table_heavy": {
-          "markitdown": 18.5,
-          "docling": 1627.0,
+          "markitdown": 49.5,
+          "docling": 3274.0,
           "llamaparse": null
         },
         "multicolumn": {
-          "markitdown": 22,
-          "docling": 1448,
+          "markitdown": 51,
+          "docling": 542,
           "llamaparse": null
         }
       }
@@ -900,14 +901,14 @@
         "winner": "docling",
         "composites": {
           "markitdown": 0.0,
-          "docling": 0.9480675014052342
+          "docling": 0.9679603330740613
         }
       },
       "image": {
         "winner": "docling",
         "composites": {
           "markitdown": 0.0,
-          "docling": 0.9311193251084281
+          "docling": 0.9454674130609403
         }
       },
       "table_heavy": {

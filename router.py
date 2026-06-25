@@ -11,11 +11,15 @@ Routing strategy (in order):
    caller is asking for diagnostic behavior, not best-of.
 2. **Format-driven preference.** Some formats route differently from
    the markitdown default (see `_FORMAT_PREFERENCE`).
-3. **Fallback chain.** If the preferred backend errors or returns empty
-   markdown, try the next backend. Skip backends whose `is_available()`
-   reports False so missing optional deps don't show as failures.
+3. **Fallback chain.** If the preferred backend errors or returns
+   low-fidelity markdown (empty, or near-zero text for a large input — see
+   `_is_low_fidelity`), try the next backend. Skip backends whose
+   `is_available()` reports False so missing optional deps don't show as
+   failures.
 4. **Stop-on-first-success.** Return as soon as a backend produces
-   non-empty markdown with no error.
+   markdown that clears the quality gate with no error. A non-empty but
+   low-fidelity result (e.g. markitdown's garbage on a scanned PDF) no
+   longer terminates the chain — it escalates.
 
 The audit trail accumulates every attempt (success and failure) under
 the result's `chain` field so the operator can see why an escalation
@@ -55,6 +59,38 @@ _FORMAT_PREFERENCE: dict[str, list[str]] = {
 }
 
 _DEFAULT_CHAIN = ["markitdown", "docling", "llamaparse"]
+
+# Quality gate (MYC-1671). A non-empty, error-free result is ACCEPTED only when
+# it carries enough text to be plausibly faithful — otherwise the chain
+# escalates instead of terminating on it. The old gate accepted any non-empty
+# string, so a scanned PDF that markitdown turned into garbage-but-non-empty
+# stopped the chain and served low-fidelity output silently.
+#
+# Signal: text density = chars of stripped markdown per input byte. Calibrated
+# from the parse-fidelity corpus (tests/eval/fixtures): digital/text PDFs yield
+# >=0.28 chars/byte via markitdown; image-only ("scanned") PDFs yield ~0
+# (markitdown has no OCR). A LARGE input that produced almost no text is the
+# scanned/garbage case. Small inputs are exempt — a short clean note is dense
+# and faithful, not low-fidelity — so the floor avoids false escalations.
+_MIN_TEXT_DENSITY = 0.02      # chars of stripped markdown per input byte
+_DENSITY_FLOOR_BYTES = 4096   # below this many input bytes, trust non-empty
+
+
+def _is_low_fidelity(result: ParseResult) -> bool:
+    """True when a non-empty, error-free result is too sparse to trust.
+
+    Empty markdown is low-fidelity by definition (preserves the old
+    empty-escalates behavior). For a large input, near-zero extracted text
+    (below ``_MIN_TEXT_DENSITY``) means the backend missed the content — a
+    scanned page with no OCR, or a junk text layer — so escalate. Small inputs
+    are trusted on non-empty alone.
+    """
+    text = result.markdown.strip()
+    if not text:
+        return True
+    if result.bytes_in >= _DENSITY_FLOOR_BYTES:
+        return (len(text) / result.bytes_in) < _MIN_TEXT_DENSITY
+    return False
 
 
 @dataclass
@@ -157,7 +193,7 @@ def _run_chain(
         result = mod.parse(data, filename=filename, hints=hints)
         chain.append(result)
         last = result
-        if result.error is None and result.markdown.strip():
+        if result.error is None and not _is_low_fidelity(result):
             return RouteResult(final=result, chain=chain, chosen_strategy="default")
 
     if last is None:

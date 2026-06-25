@@ -6,7 +6,7 @@ Corpus: **16 fixtures** across 5 document classes, scored against derived ground
 
 Metrics: **text** = 1 − normalized edit distance; **table** = TEDS (Tree-Edit-Distance similarity); **reading-order** = 1 − normalized block-order edit distance. Definitions follow OmniDocBench / PubTabNet (see the scorer module docstring).
 
-**Provenance.** python 3.14.5 · backends: markitdown 0.1.5, docling 2.93.0 · fixture-set `a9156634583f6b60` (16 docs). Regenerate when any backend version changes — a stale matrix lies silently.
+**Provenance.** python 3.14.5 · backends: markitdown 0.1.5, docling 2.93.0 · docling OCR: tesseract · fixture-set `a9156634583f6b60` (16 docs). Regenerate when any backend version or the docling OCR engine changes — a stale matrix lies silently.
 
 ## Backend availability in this run
 
@@ -19,8 +19,8 @@ Metrics: **text** = 1 − normalized edit distance; **table** = TEDS (Tree-Edit-
 | doc-class | markitdown | docling | llamaparse |
 |---|---|---|---|
 | digital_pdf | 0.949 | 0.967 | — |
-| scanned_pdf | 0.000 | 0.868 | — |
-| image | 0.000 | 0.900 | — |
+| scanned_pdf | 0.000 | 0.915 | — |
+| image | 0.000 | 0.941 | — |
 | table_heavy | 0.927 | 0.893 | — |
 | multicolumn | 0.353 | 0.999 | — |
 
@@ -29,8 +29,8 @@ Metrics: **text** = 1 − normalized edit distance; **table** = TEDS (Tree-Edit-
 | doc-class | markitdown | docling | llamaparse |
 |---|---|---|---|
 | digital_pdf | 0.500 | 1.000 | — |
-| scanned_pdf | 0.000 | 0.976 | — |
-| image | 0.000 | 0.894 | — |
+| scanned_pdf | 0.000 | 0.989 | — |
+| image | 0.000 | 0.895 | — |
 | table_heavy | 1.000 | 1.000 | — |
 | multicolumn | — | — | — |
 
@@ -48,8 +48,8 @@ Metrics: **text** = 1 − normalized edit distance; **table** = TEDS (Tree-Edit-
 
 | backend | text | table TEDS | reading-order | median latency (ms) |
 |---|---|---|---|---|
-| markitdown | 0.375 | 0.300 | 0.384 | 10 |
-| docling | 0.912 | 0.969 | 1.000 | 1741 |
+| markitdown | 0.375 | 0.300 | 0.384 | 29 |
+| docling | 0.937 | 0.974 | 1.000 | 2200 |
 | llamaparse | — | — | — | — |
 
 ## Findings: routing per doc-class
@@ -57,8 +57,8 @@ Metrics: **text** = 1 − normalized edit distance; **table** = TEDS (Tree-Edit-
 Best backend by composite (mean of applicable metrics). This is the evidence base for the router's format-preference table.
 
 - **digital_pdf** → best: `docling`  (composite: docling 0.989, markitdown 0.816)
-- **scanned_pdf** → best: `docling`  (composite: docling 0.948, markitdown 0.000)
-- **image** → best: `docling`  (composite: docling 0.931, markitdown 0.000)
+- **scanned_pdf** → best: `docling`  (composite: docling 0.968, markitdown 0.000)
+- **image** → best: `docling`  (composite: docling 0.945, markitdown 0.000)
 - **table_heavy** → best: `markitdown`  (composite: markitdown 0.976, docling 0.964)
 - **multicolumn** → best: `docling`  (composite: docling 0.999, markitdown 0.248)
 
@@ -67,18 +67,18 @@ Best backend by composite (mean of applicable metrics). This is the evidence bas
 | fixture | doc-class | markitdown | docling | llamaparse |
 |---|---|---|---|---|
 | memo_digital_pdf | digital_pdf | 0.996 | 0.998 | — |
-| memo_scanned_pdf | scanned_pdf | 0.000 | 0.909 | — |
-| memo_image_png | image | 0.000 | 0.993 | — |
-| memo_image_jpg | image | 0.000 | 0.838 | — |
+| memo_scanned_pdf | scanned_pdf | 0.000 | 0.998 | — |
+| memo_image_png | image | 0.000 | 0.998 | — |
+| memo_image_jpg | image | 0.000 | 0.998 | — |
 | financials_digital_pdf | table_heavy | 0.928 | 0.888 | — |
-| financials_scanned_pdf | scanned_pdf | 0.000 | 0.875 | — |
-| financials_image_png | image | 0.000 | 0.881 | — |
+| financials_scanned_pdf | scanned_pdf | 0.000 | 0.888 | — |
+| financials_image_png | image | 0.000 | 0.888 | — |
 | contract_digital_pdf | digital_pdf | 0.856 | 0.945 | — |
-| contract_scanned_pdf | scanned_pdf | 0.000 | 0.892 | — |
+| contract_scanned_pdf | scanned_pdf | 0.000 | 0.945 | — |
 | review_singlecol_pdf | digital_pdf | 0.997 | 0.999 | — |
 | review_multicolumn_pdf | multicolumn | 0.353 | 0.999 | — |
 | invoice_digital_pdf | table_heavy | 0.925 | 0.897 | — |
-| invoice_scanned_pdf | scanned_pdf | 0.000 | 0.783 | — |
-| invoice_image_png | image | 0.000 | 0.886 | — |
+| invoice_scanned_pdf | scanned_pdf | 0.000 | 0.820 | — |
+| invoice_image_png | image | 0.000 | 0.881 | — |
 | research_digital_pdf | digital_pdf | 0.949 | 0.926 | — |
-| research_scanned_pdf | scanned_pdf | 0.000 | 0.882 | — |
+| research_scanned_pdf | scanned_pdf | 0.000 | 0.926 | — |
