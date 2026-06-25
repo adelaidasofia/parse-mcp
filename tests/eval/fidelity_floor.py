@@ -209,17 +209,24 @@ def main(argv=None) -> int:
     )
     ap.add_argument("--matrix", default=str(here / "parse_fidelity_matrix.json"))
     ap.add_argument("--fixtures-dir", default=str(here / "fixtures"))
-    ap.add_argument("--backend", default="docling")
+    ap.add_argument("--backend", default="docling", help="backend to RUN now")
+    # The committed-matrix column the floor is read from. Defaults to --backend
+    # (the real gate: docling-now vs docling-baseline). A negative control sets
+    # it explicitly, e.g. --backend markitdown --baseline-backend docling, to
+    # assert a weaker pipeline cannot clear the docling floor — comparing a
+    # backend against its OWN column is vacuous (it just reproduces itself).
+    ap.add_argument("--baseline-backend", default=None)
     ap.add_argument("--epsilon", type=float, default=DEFAULT_EPSILON)
     ap.add_argument("--metrics", nargs="*", default=list(GATED_METRICS))
     args = ap.parse_args(argv)
 
     metrics = tuple(args.metrics)
-    baseline = normalize_baseline(load_matrix(args.matrix), args.backend, metrics)
+    baseline_backend = args.baseline_backend or args.backend
+    baseline = normalize_baseline(load_matrix(args.matrix), baseline_backend, metrics)
     if not baseline:
         print(
             f"FAIL — baseline matrix {args.matrix} has no gated cells for "
-            f"backend '{args.backend}'. Nothing to gate against.",
+            f"backend '{baseline_backend}'. Nothing to gate against.",
             flush=True,
         )
         return 1
@@ -230,13 +237,26 @@ def main(argv=None) -> int:
     engine = prov.get("docling_ocr_engine")
     versions = prov.get("backend_versions", {})
     print(
-        f"parse-fidelity floor — backend={args.backend} "
-        f"version={versions.get(args.backend)} "
-        f"ocr_engine={engine} epsilon={args.epsilon}",
+        f"parse-fidelity floor — run={args.backend} "
+        f"version={versions.get(args.backend)} ocr_engine={engine} "
+        f"vs baseline={baseline_backend} epsilon={args.epsilon}",
         flush=True,
     )
     result = check_floor(current, baseline, epsilon=args.epsilon, metrics=metrics)
     print(result.report_str(epsilon=args.epsilon), flush=True)
+    # Per-cell gauge: current vs baseline vs floor for every gated cell, so a
+    # passing run still shows its jitter margin (and a regression is legible).
+    for (cls, metric), base in sorted(baseline.items()):
+        if metric not in metrics or base is None:
+            continue
+        cur = current.get((cls, metric))
+        cur_s = f"{cur:.4f}" if cur is not None else "MISSING"
+        ok = cur is not None and cur >= base - args.epsilon
+        print(
+            f"  {cls}/{metric}: current={cur_s} baseline={base:.4f} "
+            f"floor={base - args.epsilon:.4f} [{'ok' if ok else 'FAIL'}]",
+            flush=True,
+        )
     return 0 if result.ok else 1
 
 

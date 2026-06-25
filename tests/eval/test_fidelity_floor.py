@@ -111,6 +111,29 @@ def test_normalize_aggregate_shape():
     assert ("scanned_pdf", "reading_order") not in norm  # not gated by default
 
 
+def test_normalize_extracts_named_backend_column():
+    # The floor is read from a SPECIFIC backend column. The negative control
+    # relies on this: markitdown gated against the docling column (not its own
+    # ~0 column, which would pass vacuously).
+    mj = {
+        "aggregate": {
+            "classes": ["scanned_pdf"],
+            "by_class": {
+                "scanned_pdf": {
+                    "docling": {"text": (0.915, 5)},
+                    "markitdown": {"text": (0.0, 5)},
+                }
+            },
+        }
+    }
+    assert normalize_baseline(mj, "docling")[("scanned_pdf", "text")] == 0.915
+    assert normalize_baseline(mj, "markitdown")[("scanned_pdf", "text")] == 0.0
+    # markitdown's ~0 current cannot clear the docling floor -> regression.
+    current = {("scanned_pdf", "text"): 0.0}
+    docling_floor = normalize_baseline(mj, "docling")
+    assert not check_floor(current, docling_floor, epsilon=0.02).ok
+
+
 def test_normalize_report_shape_recomputes_means():
     # mrp committed shape (and ANY fresh evaluate() report): {"fixtures": [...]}
     rep = {

@@ -110,17 +110,18 @@ jobs:
           pip install --extra-index-url https://download.pytorch.org/whl/cpu \
             -r requirements-docling.txt
 
-      # NEGATIVE CONTROL 1 (deterministic): a markitdown-only "pipeline" has no
-      # OCR, so it scores ~0 on scanned/image and MUST fail the floor. If this
-      # passes, the gate is vacuous. No flaky OCR-engine dependency.
-      - name: 'Negative control 1: markitdown-only must FAIL the floor'
+      # NEGATIVE CONTROL 1 (deterministic): markitdown has no OCR, so it scores
+      # ~0 on scanned/image and MUST fail the DOCLING floor. Gated against the
+      # docling baseline (--baseline-backend docling) — comparing markitdown to
+      # its own ~0 column would be vacuous. No flaky OCR-engine dependency.
+      - name: 'Negative control 1: markitdown must FAIL the docling floor'
         if: steps.relevance.outputs.relevant == 'true'
         run: |
-          if python tests/eval/fidelity_floor.py --backend markitdown; then
-            echo "::error::Floor PASSED on markitdown-only — gate is VACUOUS."
+          if python tests/eval/fidelity_floor.py --backend markitdown --baseline-backend docling; then
+            echo "::error::markitdown cleared the docling floor — gate is VACUOUS."
             exit 1
           fi
-          echo "OK: markitdown-only correctly failed the floor."
+          echo "OK: markitdown correctly failed the docling floor."
 
       # NEGATIVE CONTROL 2 (real detune): docling with Tesseract NOT yet
       # installed degrades to a weaker OCR engine (or errors on OCR), dropping
