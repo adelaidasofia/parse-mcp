@@ -6,6 +6,8 @@ Corpus: **16 fixtures** across 5 document classes, scored against derived ground
 
 Metrics: **text** = 1 − normalized edit distance; **table** = TEDS (Tree-Edit-Distance similarity); **reading-order** = 1 − normalized block-order edit distance. Definitions follow OmniDocBench / PubTabNet (see the scorer module docstring).
 
+**Provenance.** python 3.14.5 · backends: markitdown 0.1.5, docling 2.93.0 · fixture-set `a9156634583f6b60` (16 docs). Regenerate when any backend version changes — a stale matrix lies silently.
+
 ## Backend availability in this run
 
 - `markitdown`: available
@@ -44,11 +46,11 @@ Metrics: **text** = 1 − normalized edit distance; **table** = TEDS (Tree-Edit-
 
 ## Overall (mean across all applicable fixtures)
 
-| backend | text | table TEDS | reading-order |
-|---|---|---|---|
-| markitdown | 0.375 | 0.300 | 0.384 |
-| docling | 0.912 | 0.969 | 1.000 |
-| llamaparse | — | — | — |
+| backend | text | table TEDS | reading-order | median latency (ms) |
+|---|---|---|---|---|
+| markitdown | 0.375 | 0.300 | 0.384 | 10 |
+| docling | 0.912 | 0.969 | 1.000 | 1741 |
+| llamaparse | — | — | — | — |
 
 ## Findings: routing per doc-class
 

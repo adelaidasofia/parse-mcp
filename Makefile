@@ -5,3 +5,11 @@
 .PHONY: ci
 ci:
 	pytest tests/ -v || [ $$? -eq 5 ]
+
+# Regenerate the parse-fidelity matrix from the fixture corpus. Run after any
+# parse-backend version or config change — the committed matrix rots otherwise.
+# markitdown is base; `pip install docling` and set LLAMA_CLOUD_API_KEY to
+# populate those columns.
+.PHONY: eval
+eval:
+	python tests/eval/score_parse_fidelity.py

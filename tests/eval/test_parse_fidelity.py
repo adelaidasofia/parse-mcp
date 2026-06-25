@@ -16,6 +16,7 @@ from tests.eval.score_parse_fidelity import (
     Node,
     _levenshtein,
     _tree_edit_distance,
+    aggregate,
     evaluate,
     normalized_edit_distance,
     reading_order_score,
@@ -271,3 +272,20 @@ def test_evaluate_covers_every_fixture():
     # The harness must score the whole corpus, not silently drop fixtures.
     assert len(res["fixtures"]) >= 15
     assert all("doc_class" in f and f["results"] for f in res["fixtures"])
+
+
+def test_evaluate_records_provenance():
+    # Anti-rot: the matrix must carry what produced it so staleness is visible.
+    res = evaluate(_FIXTURES, backends=["markitdown"])
+    prov = res["provenance"]
+    assert prov["n_fixtures"] >= 15
+    assert len(prov["fixture_set_sha256"]) == 16  # corpus identity, not a literal
+    assert "markitdown" in prov["backend_versions"]
+
+
+def test_evaluate_and_aggregate_emit_latency():
+    # The cost axis the router needs to escalate-not-default.
+    res = evaluate(_FIXTURES, backends=["markitdown"])
+    assert "latency_ms" in res["fixtures"][0]["results"]["markitdown"]
+    agg = aggregate(res)
+    assert "markitdown" in agg["latency"]["overall"]

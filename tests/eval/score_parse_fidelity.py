@@ -447,13 +447,54 @@ def _backend_module(name: str):
     }[name]
 
 
+def _backend_version(name: str):
+    import importlib.metadata as ilm
+
+    pkg = {
+        "markitdown": "markitdown",
+        "docling": "docling",
+        "llamaparse": "llama-cloud-services",
+    }.get(name)
+    if not pkg:
+        return None
+    try:
+        return ilm.version(pkg)
+    except Exception:
+        return None
+
+
+def _provenance(fixtures_dir, backends) -> dict:
+    """Record what produced this matrix so it cannot rot unnoticed.
+
+    Backend + python versions pin the toolchain; the fixture-set hash pins
+    the corpus identity. A backend upgrade or a corpus change moves these,
+    flagging that the committed matrix must be regenerated.
+    """
+    import hashlib
+    import platform
+
+    fixtures_dir = Path(fixtures_dir)
+    manifest_bytes = (fixtures_dir / "manifest.json").read_bytes()
+    manifest = json.loads(manifest_bytes)
+    digest = hashlib.sha256(manifest_bytes)
+    for fx in sorted(manifest["fixtures"], key=lambda x: x["id"]):
+        digest.update((fixtures_dir / fx["file"]).read_bytes())
+        digest.update((fixtures_dir / fx["ground_truth"]).read_bytes())
+    return {
+        "python": platform.python_version(),
+        "backend_versions": {b: _backend_version(b) for b in backends},
+        "fixture_set_sha256": digest.hexdigest()[:16],
+        "n_fixtures": len(manifest["fixtures"]),
+    }
+
+
 def _run_one_backend(name: str, data: bytes, filename: str):
-    """Return (markdown, status). status in {ok, unavailable, error}."""
+    """Return (markdown, status, latency_ms). status in {ok, unavailable, error}."""
     mod = _backend_module(name)
     if not mod.is_available():
-        return "", "unavailable"
+        return "", "unavailable", 0
     result = mod.parse(data, filename=filename)
-    return result.markdown, ("error" if result.error else "ok")
+    return result.markdown, ("error" if result.error else "ok"), result.latency_ms
 
 
 def evaluate(fixtures_dir, backends=None) -> dict:
@@ -482,18 +523,30 @@ def evaluate(fixtures_dir, backends=None) -> dict:
         entry = {k: fx[k] for k in ("id", "doc_class", "content", "has_table", "file")}
         entry["results"] = {}
         for name in backends:
-            markdown, status = _run_one_backend(name, data, fx["file"])
+            markdown, status, latency_ms = _run_one_backend(name, data, fx["file"])
             entry["results"][name] = {
                 "status": status,
                 "output_len": len(markdown),
+                "latency_ms": latency_ms,
                 "scores": score_document(markdown, gt) if status == "ok" else None,
             }
         out["fixtures"].append(entry)
+    out["provenance"] = _provenance(fixtures_dir, backends)
     return out
 
 
 def _mean(values: list[float]):
     return sum(values) / len(values) if values else None
+
+
+def _median(values: list[float]):
+    if not values:
+        return None
+    ordered = sorted(values)
+    mid = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[mid]
+    return (ordered[mid - 1] + ordered[mid]) / 2
 
 
 def aggregate(evaluation: dict) -> dict:
@@ -525,9 +578,33 @@ def aggregate(evaluation: dict) -> dict:
                 table[backend][metric] = (_mean(vals), len(vals))
         return table
 
+    def latency_collect(predicate):
+        out_l = {}
+        for backend in backends:
+            vals = []
+            for fx in evaluation["fixtures"]:
+                if not predicate(fx):
+                    continue
+                res = fx["results"].get(backend)
+                if res and res["status"] == "ok":
+                    vals.append(res.get("latency_ms", 0))
+            out_l[backend] = _median(vals)
+        return out_l
+
     by_class = {c: collect(lambda fx, c=c: fx["doc_class"] == c) for c in classes}
     overall = collect(lambda fx: True)
-    return {"classes": classes, "by_class": by_class, "overall": overall}
+    latency = {
+        "overall": latency_collect(lambda fx: True),
+        "by_class": {
+            c: latency_collect(lambda fx, c=c: fx["doc_class"] == c) for c in classes
+        },
+    }
+    return {
+        "classes": classes,
+        "by_class": by_class,
+        "overall": overall,
+        "latency": latency,
+    }
 
 
 def compute_findings(evaluation: dict, agg: dict) -> dict:
@@ -571,6 +648,18 @@ def _metric_table(evaluation: dict, agg: dict, metric: str) -> str:
     return "\n".join(rows)
 
 
+def _provenance_line(evaluation: dict) -> str:
+    prov = evaluation.get("provenance") or {}
+    versions = prov.get("backend_versions", {})
+    vstr = ", ".join(f"{b} {v}" for b, v in versions.items() if v) or "n/a"
+    return (
+        f"**Provenance.** python {prov.get('python', '?')} · backends: {vstr} · "
+        f"fixture-set `{prov.get('fixture_set_sha256', '?')}` "
+        f"({prov.get('n_fixtures', '?')} docs). Regenerate when any backend "
+        "version changes — a stale matrix lies silently."
+    )
+
+
 def render_matrix_md(evaluation: dict, agg: dict) -> str:
     backends = evaluation["backends"]
     findings = compute_findings(evaluation, agg)
@@ -598,6 +687,8 @@ def render_matrix_md(evaluation: dict, agg: dict) -> str:
         "block-order edit distance. Definitions follow OmniDocBench / PubTabNet "
         "(see the scorer module docstring).",
         "",
+        _provenance_line(evaluation),
+        "",
         "## Backend availability in this run",
         "",
     ]
@@ -615,14 +706,20 @@ def render_matrix_md(evaluation: dict, agg: dict) -> str:
               _metric_table(evaluation, agg, "reading_order"),
               ""]
 
-    # Overall per-backend means.
+    # Overall per-backend means + median latency. Latency is the cost axis:
+    # highest fidelity is not a free default — docling is far slower than
+    # markitdown, so route cheap-first and escalate, do not default to the winner.
+    lat = agg.get("latency", {}).get("overall", {})
     lines += ["## Overall (mean across all applicable fixtures)", "",
-              "| backend | text | table TEDS | reading-order |",
-              "|---|---|---|---|"]
+              "| backend | text | table TEDS | reading-order | median latency (ms) |",
+              "|---|---|---|---|---|"]
     for b in backends:
         o = agg["overall"][b]
+        lm = lat.get(b)
+        lat_str = str(int(lm)) if lm is not None else "—"
         lines.append(
-            f"| {b} | {_fmt(o['text'])} | {_fmt(o['table'])} | {_fmt(o['reading_order'])} |"
+            f"| {b} | {_fmt(o['text'])} | {_fmt(o['table'])} | "
+            f"{_fmt(o['reading_order'])} | {lat_str} |"
         )
 
     # Findings: which backend to prefer per doc-class (informs the router's
