@@ -95,7 +95,7 @@ jobs:
       # conversion itself is then CPU + no-network, as the eval is meant to be.
       - name: Cache docling model weights
         if: steps.relevance.outputs.relevant == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cache/docling
