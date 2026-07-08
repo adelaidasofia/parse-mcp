@@ -22,9 +22,13 @@ response to stdout. We accept any exit code when stdout has substantial
 content (>=20 chars). Throwing on non-zero exit discards a perfectly
 good response.
 
-**Fallback (API key, opt-in):** If the CLI fails OR
-`CLAUDE_ROUTER_PREFER_API_KEY=1` is set, falls back to the Anthropic
-SDK. Caller can disable the CLI entirely with `CLAUDE_ROUTER_DISABLE_CLI=1`.
+**Fallback (API key, opt-in):** Falls back to the paid Anthropic SDK ONLY
+when the `claude` CLI binary cannot run at all (not-found / launch-failed),
+or when `CLAUDE_ROUTER_PREFER_API_KEY=1` / `CLAUDE_ROUTER_DISABLE_CLI=1` is
+set. A CLI rate-limit / usage-cap / error response does NOT spill to the
+paid API — it fails loud. Hitting the Max weekly/session cap must never
+silently bill the API key (fixed the parse-mcp billing-leak bug class
+2026-07-08; mirrors `_claude_router.py`'s RateLimitExhausted re-raise).
 
 **NVIDIA tier (separate, not used here):** For grunt-work text generation
 (translation, format conversion, simple extraction), `⚙️ Meta/scripts/nvidia.sh`
@@ -320,6 +324,22 @@ def _claude_via_sdk(
         return "", {}, f"{type(exc).__name__}: {exc}"
 
 
+# Error strings from `_claude_via_cli` that mean the CLI binary itself could
+# not be launched — the ONLY case where spilling to the paid SDK is legitimate
+# (there is no Max path to use). Every other CLI error (a rate-limit / usage-cap
+# banner, an is_error envelope, a truncation, an empty exit) means the CLI ran
+# and Max answered with something unusable; paying per token to retry that is
+# the billing leak this guards against. On those we fail loud instead.
+_CLI_UNAVAILABLE_MARKERS = ("not found", "launch failed")
+
+
+def _cli_unavailable(err: str | None) -> bool:
+    if not err:
+        return False
+    low = err.lower()
+    return any(marker in low for marker in _CLI_UNAVAILABLE_MARKERS)
+
+
 def interpret(
     data: bytes,
     *,
@@ -348,7 +368,14 @@ def interpret(
     # Auth preference: Max subscription first (CLI), API key fallback only.
     # Codified rule: always use Max account when possible vs API key.
     # Pattern source: `⚙️ Meta/scripts/_claude_router.py`.
-    prefer_api = os.environ.get("CLAUDE_ROUTER_PREFER_API_KEY") == "1"
+    # Auth preference: Max subscription first (CLI), paid API key ONLY as an
+    # explicit opt-in or when the CLI binary cannot run. Codified rule: always
+    # use the Max account when possible vs the API key. Both env vars are the
+    # advertised escape hatch for anyone who genuinely wants the paid path.
+    prefer_api = (
+        os.environ.get("CLAUDE_ROUTER_PREFER_API_KEY") == "1"
+        or os.environ.get("CLAUDE_ROUTER_DISABLE_CLI") == "1"
+    )
 
     answer = ""
     usage: dict[str, Any] = {}
@@ -359,8 +386,9 @@ def interpret(
         answer, usage, err = _claude_via_cli(markdown, filename, instruction, model)
         if err is None:
             auth = "max-subscription"
-        else:
-            # CLI unavailable or errored — try the SDK fallback.
+        elif _cli_unavailable(err):
+            # The claude CLI binary itself could not launch — there is no Max
+            # path to use, so the paid SDK fallback is legitimate here.
             sdk_answer, sdk_usage, sdk_err = _claude_via_sdk(
                 markdown, filename, instruction, model, max_tokens
             )
@@ -368,7 +396,14 @@ def interpret(
                 answer, usage, auth = sdk_answer, sdk_usage, "api-key"
                 err = None
             else:
-                err = f"cli: {err} | sdk: {sdk_err}"
+                err = f"cli-unavailable: {err} | sdk: {sdk_err}"
+        else:
+            # The CLI RAN but Max returned no usable answer (rate-limit /
+            # usage-cap banner, error envelope, truncation, empty exit). Do NOT
+            # silently spill to the paid API — that is the billing leak. Fail
+            # loud so the caller sees the cap instead of paying per token.
+            # Opt into the paid path with CLAUDE_ROUTER_PREFER_API_KEY=1.
+            auth = "max-unavailable"
     else:
         # Explicit opt-in to SDK path.
         answer, usage, err = _claude_via_sdk(
