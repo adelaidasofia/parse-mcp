@@ -86,7 +86,7 @@ jobs:
 
       - name: Set up Python
         if: steps.relevance.outputs.relevant == 'true'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13' # docling/onnxruntime have no 3.14 wheel yet
 
