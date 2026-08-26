@@ -16,10 +16,20 @@ Pipeline tuning (MYC-1671). The converter is built with explicit
   change can't silently downgrade table fidelity.
 * **OCR engine = Tesseract CLI when available.** On the parse-fidelity
   corpus (``tests/eval/``), Tesseract CLI beat docling's auto-selected
-  engine on scanned PDFs (+0.05 text) and images (+0.04 text), with no
-  regression on digital docs. It needs only the ``tesseract`` binary — no
-  Python/torch OCR dependency. When the binary is absent we leave docling's
-  default OCR so the backend still works (graceful, just lower fidelity).
+  engine on scanned PDFs (+0.05 text) and images (+0.04 text) at the time
+  MYC-1671 measured this (docling ~2.93). It needs only the ``tesseract``
+  binary — no Python/torch OCR dependency. When the binary is absent we
+  leave docling's default OCR so the backend still works (graceful, lower
+  fidelity). **Update (parse-mcp #29, docling 2.94.0 -> 2.119.0):** docling's
+  bundled default engine (RapidOCR, refactored upstream around 2.118.0) has
+  since closed most of that gap — re-measured on the same corpus, the
+  no-Tesseract path now trails Tesseract CLI by only ~0.006-0.017 text,
+  inside the fidelity floor's epsilon. Tesseract CLI is still pinned when
+  present (it is still the marginal winner, never worse), but the
+  auto-selected fallback is no longer meaningfully "degraded" the way it was
+  when this pipeline was first tuned — see ``_FORCE_NO_OCR_ENV`` below for
+  why the floor's negative control no longer uses tesseract-absence as its
+  detune mechanism.
 * **``force_full_page_ocr`` is intentionally NOT enabled.** It OCRs over a
   PDF's native text layer and measurably regresses digital PDFs; the router
   reaches docling for scanned/hard docs via the quality gate instead.
@@ -31,6 +41,7 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 import shutil
 import time
 from pathlib import Path
@@ -53,8 +64,32 @@ def is_available() -> bool:
     return True
 
 
+# CI/test-only escape hatch for the parse-fidelity-floor negative control
+# (MYC-1793, .github/workflows/parse-fidelity-floor.yml). That control exists
+# to prove the floor gate is genuinely OCR-sensitive (anti-vacuity, same
+# purpose as the markitdown-vs-docling control). It used to induce a real
+# degradation by uninstalling the `tesseract` binary before running this
+# backend, relying on docling's fallback engine being meaningfully worse.
+# docling 2.94.0 -> 2.119.0 (parse-mcp #29) closed that gap to within the
+# floor's epsilon (see module docstring), so tesseract-absence stopped being
+# a reliable way to induce a detectable regression — the control started
+# failing not because the floor broke, but because the *mechanism* it used to
+# simulate "OCR degraded" no longer degrades anything on current docling.
+# Forcing OCR off outright is a version-proof invariant (no scanned/image doc
+# parses without OCR, regardless of which engine docling defaults to), so the
+# workflow sets this instead of just removing the tesseract binary. Never set
+# in production; the real parse path never touches this.
+_FORCE_NO_OCR_ENV = "PARSE_MCP_DOCLING_FORCE_NO_OCR"
+
+
+def _ocr_forced_off() -> bool:
+    return os.environ.get(_FORCE_NO_OCR_ENV) == "1"
+
+
 def _ocr_engine() -> str:
     """Which OCR engine the tuned converter pins. See module docstring."""
+    if _ocr_forced_off():
+        return "disabled"
     return "tesseract" if shutil.which("tesseract") else "auto"
 
 
@@ -99,13 +134,16 @@ def _build_converter():
     _warn_if_ocr_degraded()
 
     opts = PdfPipelineOptions()
-    opts.do_ocr = True
+    # Test-only: the parse-fidelity-floor negative control forces OCR off
+    # entirely via _FORCE_NO_OCR_ENV. See that constant's docstring. This is
+    # never set outside CI, so production parsing is unaffected.
+    opts.do_ocr = not _ocr_forced_off()
     opts.do_table_structure = True
     opts.table_structure_options.mode = TableFormerMode.ACCURATE
     opts.table_structure_options.do_cell_matching = True
     # Pin Tesseract CLI when the binary is present (measured fidelity winner);
     # otherwise keep docling's default OCR so a Tesseract-less host still works.
-    if shutil.which("tesseract"):
+    if opts.do_ocr and shutil.which("tesseract"):
         opts.ocr_options = TesseractCliOcrOptions()
 
     # Same tuned pipeline for born-digital/scanned PDFs and standalone images.

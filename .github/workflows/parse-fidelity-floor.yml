@@ -123,18 +123,33 @@ jobs:
           fi
           echo "OK: markitdown correctly failed the docling floor."
 
-      # NEGATIVE CONTROL 2 (real detune): docling with Tesseract NOT yet
-      # installed degrades to a weaker OCR engine (or errors on OCR), dropping
-      # scanned/image text below the floor. Proves the gate is sensitive to a
-      # real OCR regression — the "Tesseract removed" case from MYC-1793.
-      - name: 'Negative control 2: docling without Tesseract must FAIL the floor'
+      # NEGATIVE CONTROL 2 (real detune): docling with OCR forced off degrades
+      # hard on scanned/image docs, dropping text/table below the floor.
+      # Proves the gate is sensitive to a real OCR regression — the
+      # "Tesseract removed" case from MYC-1793.
+      #
+      # Originally this ran docling with the tesseract binary simply not yet
+      # installed (see git history), relying on docling falling back to a
+      # meaningfully weaker engine. parse-mcp #29 (docling 2.94.0 -> 2.119.0)
+      # found that premise stale: docling's bundled default (RapidOCR,
+      # refactored upstream ~2.118.0) closed the gap to within the floor's
+      # epsilon, so tesseract-absence stopped inducing a detectable
+      # regression and this control started failing closed (the intended
+      # behavior -- "PASSED but shouldn't have" is exactly what it exists to
+      # catch). Forcing OCR off outright via PARSE_MCP_DOCLING_FORCE_NO_OCR
+      # (backends/docling_backend.py) is a version-proof detune: it does not
+      # depend on which engine docling defaults to, only on OCR running at
+      # all, so a future engine improvement cannot quietly defeat it again.
+      - name: 'Negative control 2: docling with OCR forced off must FAIL the floor'
         if: steps.relevance.outputs.relevant == 'true'
+        env:
+          PARSE_MCP_DOCLING_FORCE_NO_OCR: '1'
         run: |
           if python tests/eval/fidelity_floor.py --backend docling; then
-            echo "::error::Floor PASSED with Tesseract removed — gate not OCR-sensitive."
+            echo "::error::Floor PASSED with OCR forced off — gate not OCR-sensitive."
             exit 1
           fi
-          echo "OK: docling-without-Tesseract correctly failed the floor."
+          echo "OK: docling-with-OCR-off correctly failed the floor."
 
       - name: Install Tesseract OCR
         if: steps.relevance.outputs.relevant == 'true'

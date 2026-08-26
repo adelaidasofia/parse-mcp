@@ -19,7 +19,7 @@ pip3 install --break-system-packages docling
 
 First parse downloads the layout + table-detection model weights (~500 MB). Subsequent parses reuse the cache. No env vars needed.
 
-**For best scanned/image OCR fidelity, also install the Tesseract binary.** Docling pins the Tesseract CLI when it is present — it scored highest on the parse-fidelity matrix (`tests/eval/parse_fidelity_matrix.md`: scanned text 0.915 vs ~0.87 on the auto-selected engine). Without it, Docling silently falls back to a lower-fidelity OCR engine and logs a `degraded mode` warning.
+**For best scanned/image OCR fidelity, also install the Tesseract binary.** Docling pins the Tesseract CLI when it is present — it still scores highest on the parse-fidelity matrix (`tests/eval/parse_fidelity_matrix.md`: scanned text ~0.915 vs ~0.91 on the auto-selected engine as of docling 2.119.0 — docling's bundled default OCR has closed most of the gap since this was first measured against docling ~2.93, where the auto-selected engine trailed by a much wider margin, ~0.87). Without Tesseract, Docling falls back to its bundled OCR engine and logs a `degraded mode` warning; the gap is now small but still real, so Tesseract remains the recommended install.
 
 ```bash
 # macOS
