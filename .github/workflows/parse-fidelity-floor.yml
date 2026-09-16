@@ -110,6 +110,23 @@ jobs:
           pip install --extra-index-url https://download.pytorch.org/whl/cpu \
             -r requirements-docling.txt
 
+      # FAIL FAST, BEFORE THE EXPENSIVE SCORING: the PDF backend must be the
+      # explicitly pinned one. docling 2.123.0 (upstream PR #3764) swapped
+      # PdfFormatOption's default to the threaded backend; this repo did not
+      # set backend=, so the 2.119.0 -> 2.123.0 bump inherited it and
+      # scanned_pdf/table fell below the floor (MYC-4802). The floor DOES
+      # catch that, but only as a score delta after a full ~3min run, leaving
+      # the cause to be inferred from a TEDS number. This names it in seconds.
+      #
+      # pytest is installed here deliberately: this job installs the package
+      # plus pinned docling, not the test deps, so `python -m pytest` would
+      # otherwise fail on a missing module rather than on the contract.
+      - name: 'Backend pin: PDF must use the pinned DoclingParseDocumentBackend'
+        if: steps.relevance.outputs.relevant == 'true'
+        run: |
+          pip install --quiet pytest
+          python -m pytest tests/integration/test_docling_pdf_backend.py -q
+
       # NEGATIVE CONTROL 1 (deterministic): markitdown has no OCR, so it scores
       # ~0 on scanned/image and MUST fail the DOCLING floor. Gated against the
       # docling baseline (--baseline-backend docling) — comparing markitdown to
