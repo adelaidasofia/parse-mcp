@@ -2,17 +2,29 @@
 #
 # docling is an OPTIONAL backend (pyproject [project.optional-dependencies]).
 # Operators install whatever version they need; this file does NOT constrain
-# them. It pins the version the committed parse-fidelity matrix
-# (tests/eval/parse_fidelity_matrix.json) was generated against, and the
-# version the CI fidelity gate (.github/workflows/parse-fidelity-floor.yml)
-# installs to prove a bump did not regress text/table fidelity before merge.
+# them. It pins the version the CI fidelity gate
+# (.github/workflows/parse-fidelity-floor.yml) installs to prove a bump did
+# not regress text/table fidelity, scored against the committed baseline
+# matrix (tests/eval/parse_fidelity_matrix.json), before merge.
 #
-# PINNED ==2.93.0: the Tesseract-CLI OCR tuning (backends/docling_backend.py)
-# is validated only on docling 2.93.0 (scanned 0.915 / image 0.941 text).
+# PIN and BASELINE are two DIFFERENT versions. Keep them straight:
+#   * PIN is the `docling==` line at the bottom of this file: the engine CI
+#     installs and scores. Dependabot bumps it, and it has moved several
+#     times since 2.93.0. Do NOT restate its value up here — a version number
+#     duplicated into this comment is exactly what rotted it last time.
+#   * BASELINE (tests/eval/parse_fidelity_matrix.json) is STILL the docling
+#     2.93.0 scoring run (scanned 0.915 / image 0.941 text, 16 fixtures) — the
+#     run the Tesseract-CLI OCR tuning (backends/docling_backend.py) was
+#     validated on. No bump has regenerated it, and that is DELIBERATE:
+#     fidelity_floor.py gates every run at `baseline - epsilon`, so the
+#     baseline is a fixed reference point. Re-baselining on a bump would
+#     erase the regression signal the gate exists to catch.
+#
 # A docling bump is a PRODUCTION inference-path change ("A Model Swap Is a
 # Production Change — Gate the Inference Path") — dependabot bumps THIS pin,
-# the fidelity gate re-scores the 16-fixture corpus, and the bump merges only
-# if it holds the floor. `==`, not `>=`, so the gate tests an exact engine.
+# the fidelity gate re-scores the 16-fixture corpus against that baseline, and
+# the bump merges only if it holds the floor. `==`, not `>=`, so the gate
+# tests an exact engine.
 #
 # CPU torch (pulled transitively) resolves from the PyTorch CPU index; the
 # workflow installs with --extra-index-url https://download.pytorch.org/whl/cpu.
