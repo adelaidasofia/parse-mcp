@@ -118,6 +118,7 @@ def _build_converter():
     Raises ImportError if docling is not installed; callers guard with
     ``is_available()`` / catch it and surface a clean ParseResult.
     """
+    from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
         PdfPipelineOptions,
@@ -146,10 +147,30 @@ def _build_converter():
     if opts.do_ocr and shutil.which("tesseract"):
         opts.ocr_options = TesseractCliOcrOptions()
 
+    # Pin the pre-2.123.0 PDF backend explicitly (parse-mcp scanned-table
+    # regression). docling PR #3764 ("Default to threaded docling-parse
+    # across SDK, CLI, service, and extraction", shipped in 2.123.0) swapped
+    # PdfFormatOption's default backend from DoclingParseDocumentBackend
+    # (pypdfium2-managed, random-access load_page()) to
+    # ThreadedDoclingParseDocumentBackend (streaming iter_pages()). This repo
+    # never set `backend=` explicitly, so the docling 2.119.0 -> 2.123.0 bump
+    # (parse-mcp PR #43) silently inherited the new threaded default.
+    # Measured on the committed parse-fidelity corpus: scanned_pdf/table
+    # dropped baseline 0.9886 -> ~0.965-0.970 (drop 0.019-0.024, over the
+    # gate's 0.02 epsilon on CI's Ubuntu runner). Only the PDF-backend path
+    # regressed — image/* (ImageDocumentBackend, unaffected by this default)
+    # and digital/table_heavy PDFs (native text layer, no OCR dependency)
+    # held flat — consistent with a scanned-PDF-specific PDF-backend change,
+    # not a general TableFormer/OCR-engine regression. Explicitly requesting
+    # the old backend restores the committed baseline (see requirements-docling.txt
+    # for the pin + eval instructions). Revisit if a future docling release
+    # measurably fixes the threaded backend's scanned-PDF fidelity.
     # Same tuned pipeline for born-digital/scanned PDFs and standalone images.
     return DocumentConverter(
         format_options={
-            InputFormat.PDF: PdfFormatOption(pipeline_options=opts),
+            InputFormat.PDF: PdfFormatOption(
+                pipeline_options=opts, backend=DoclingParseDocumentBackend
+            ),
             InputFormat.IMAGE: ImageFormatOption(pipeline_options=opts),
         }
     )
