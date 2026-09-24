@@ -33,6 +33,22 @@ Pipeline tuning (MYC-1671). The converter is built with explicit
 * **``force_full_page_ocr`` is intentionally NOT enabled.** It OCRs over a
   PDF's native text layer and measurably regresses digital PDFs; the router
   reaches docling for scanned/hard docs via the quality gate instead.
+* **Tesseract CLI's OCR ``lang=`` is always the detected installed set, never
+  the class default.** ``TesseractCliOcrOptions()``'s bare default is
+  ``lang=["eng", "spa", "fra", "deu"]``. docling 2.126.0 tolerated a language
+  with no traineddata installed (silently dropped); docling >= 2.127.0 made
+  that a hard ``OcrLanguageNotSupportedError`` at pipeline-init, so the bare
+  default crashes every parse on any host lacking the non-English packs —
+  including CI's ``apt-get install -y tesseract-ocr``, which ships only
+  ``eng``. See ``_tesseract_available_langs`` (parse-mcp #51).
+* **``images_scale = 2.0``, with the PDF backend's ``render_scale`` matched
+  to it.** docling 2.128.0 (upstream PR #4244) deleted the pypdfium2-managed
+  PDF backend and made every rendered page default to 72 DPI
+  (``render_scale=1.0``) with no path from ``PdfPipelineOptions.images_scale``
+  to the backend's actual render resolution. Scanned-PDF table structure
+  recognition needs more than 72 DPI of pixel detail; unmatched
+  ``images_scale`` bumps are silently discarded (see ``_build_converter``,
+  parse-mcp #51).
 
 The tuned ``DocumentConverter`` loads several models, so it is built once
 and reused across calls (the previous code rebuilt it per parse).
@@ -43,6 +59,7 @@ import io
 import logging
 import os
 import shutil
+import subprocess
 import time
 from pathlib import Path
 
@@ -112,6 +129,59 @@ def _warn_if_ocr_degraded() -> bool:
     return False
 
 
+def _tesseract_available_langs(tesseract_cmd: str) -> list[str] | None:
+    """Languages the local ``tesseract`` binary actually has traineddata for.
+
+    MYC-4XXX / parse-mcp #51 (docling 2.126.0 -> 2.128.0). Upstream docling
+    2.127.0 hardened OCR-language resolution: a requested language with no
+    installed traineddata is now a hard ``OcrLanguageNotSupportedError`` at
+    pipeline-init time. Docling 2.126.0's ``TesseractOcrCliModel`` only
+    recorded which languages ``tesseract --list-langs`` reported and never
+    cross-checked the request against it before invoking tesseract, so an
+    unavailable language was silently dropped, never a failure. Upstream's own
+    docstring for the new behavior: "a language with no model is an error,
+    never a silent substitution" -- a deliberate hardening, not a bug.
+
+    ``TesseractCliOcrOptions()``'s class default is ``lang=["eng", "spa",
+    "fra", "deu"]`` and this backend never overrode it, so any host whose
+    tesseract install has only English -- CI's ``apt-get install -y
+    tesseract-ocr`` installs just the ``eng`` + ``osd`` traineddata; the extra
+    languages are separate apt packages (``tesseract-ocr-spa`` etc.) -- now
+    fails EVERY docling parse the instant OCR is needed: all 16 fixtures
+    errored before any measurement (fidelity-floor: 9/9 gated cells MISSING in
+    ~5s, previously a ~3min real run). Reproduced in a Linux container
+    matching CI exactly (Python 3.13.15, apt tesseract-ocr 5.3.4-1build5):
+    docling 2.126.0 passes 9/9, 2.127.0/2.128.0/2.129.0 all raise
+    ``OcrLanguageNotSupportedError: ... no model for the OCR language 'spa'``.
+
+    Detecting what is actually installed and requesting exactly that (rather
+    than hardcoding ``lang=["eng"]``) keeps the backend version-proof against
+    this class of upstream hardening AND keeps OCR genuinely multi-lingual on
+    any host that installs more language packs. Returns ``None`` when
+    detection itself fails (binary missing/errors/times out) so the caller
+    can fall back to a safe explicit default instead of the class default.
+    """
+    try:
+        out = subprocess.run(
+            [tesseract_cmd, "--list-langs"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=True,
+        )
+    except Exception:
+        return None
+    # First line is a header ("List of available languages ..."); the rest
+    # are one code per line. "osd" is the orientation/script-detection pack,
+    # not a real OCR language -- never request it as one.
+    langs = [
+        line.strip()
+        for line in out.stdout.splitlines()[1:]
+        if line.strip() and line.strip() != "osd"
+    ]
+    return langs or None
+
+
 def _build_converter():
     """Build the fidelity-tuned DocumentConverter (MYC-1671).
 
@@ -119,6 +189,7 @@ def _build_converter():
     ``is_available()`` / catch it and surface a clean ParseResult.
     """
     from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
+    from docling.datamodel.backend_options import ThreadedDoclingParseBackendOptions
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
         PdfPipelineOptions,
@@ -144,8 +215,18 @@ def _build_converter():
     opts.table_structure_options.do_cell_matching = True
     # Pin Tesseract CLI when the binary is present (measured fidelity winner);
     # otherwise keep docling's default OCR so a Tesseract-less host still works.
-    if opts.do_ocr and shutil.which("tesseract"):
-        opts.ocr_options = TesseractCliOcrOptions()
+    tesseract_cmd = shutil.which("tesseract")
+    if opts.do_ocr and tesseract_cmd:
+        # lang= ALWAYS explicit -- never the bare class default. See
+        # _tesseract_available_langs's docstring: docling >= 2.127.0 makes
+        # TesseractCliOcrOptions()'s default lang list (["eng","spa","fra",
+        # "deu"]) a hard requirement, and most hosts (incl. CI's apt install)
+        # only have "eng" traineddata, so the bare default crashes every OCR
+        # parse. Detect what is actually installed; fall back to ["eng"]
+        # (matches the fidelity corpus + this repo's validated baseline) only
+        # if detection itself fails.
+        langs = _tesseract_available_langs(tesseract_cmd) or ["eng"]
+        opts.ocr_options = TesseractCliOcrOptions(lang=langs)
 
     # Pin the pre-2.123.0 PDF backend explicitly (parse-mcp scanned-table
     # regression). docling PR #3764 ("Default to threaded docling-parse
@@ -165,11 +246,41 @@ def _build_converter():
     # the old backend restores the committed baseline (see requirements-docling.txt
     # for the pin + eval instructions). Revisit if a future docling release
     # measurably fixes the threaded backend's scanned-PDF fidelity.
+    #
+    # UPDATE (parse-mcp #51, docling 2.126.0 -> 2.128.0): the pin above is now
+    # a no-op, and scanned_pdf/table regressed a second time to the exact same
+    # 0.9645 MYC-4802 measured. Upstream PR #4244 ("threaded-only
+    # docling-parse", 2.128.0) deleted the old pypdfium2-managed
+    # implementation outright: DoclingParseDocumentBackend (and V2/V4) are now
+    # deprecated aliases of ThreadedDoclingParseDocumentBackend, which is also
+    # PdfFormatOption's own default — so the pin no longer selects different
+    # behavior, it just resolves to the class docling would have picked
+    # anyway. Root cause this time: ThreadedDoclingParseBackendOptions
+    # defaults render_scale=1.0 (72 DPI), and PdfFormatOption never wires
+    # PdfPipelineOptions.images_scale into it (only NativePdfFormatOption
+    # does, which this backend does not use) — every page rendered at 72 DPI
+    # regardless of what the table-structure model needed. Bumping
+    # images_scale alone does NOT fix it: mismatched render_scale forces a
+    # second render that reuses the same 72 DPI decode (measured identical to
+    # the un-bumped regression). Explicitly matching render_scale to
+    # images_scale restores the exact 0.9886 baseline (see parse-mcp #51 PR
+    # description for the per-config score table). A real, non-deprecated
+    # pypdfium2 backend still exists
+    # (docling.backend.pypdfium2_backend.PyPdfiumDocumentBackend) and also
+    # restores 0.9886, but it swaps the text/cell-extraction algorithm for
+    # every PDF class, not just render resolution — images_scale is the
+    # narrower fix and keeps this backend on docling's actively maintained
+    # code path.
     # Same tuned pipeline for born-digital/scanned PDFs and standalone images.
+    opts.images_scale = 2.0
     return DocumentConverter(
         format_options={
             InputFormat.PDF: PdfFormatOption(
-                pipeline_options=opts, backend=DoclingParseDocumentBackend
+                pipeline_options=opts,
+                backend=DoclingParseDocumentBackend,
+                backend_options=ThreadedDoclingParseBackendOptions(
+                    render_scale=opts.images_scale
+                ),
             ),
             InputFormat.IMAGE: ImageFormatOption(pipeline_options=opts),
         }
