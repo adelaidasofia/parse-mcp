@@ -33,6 +33,14 @@ Pipeline tuning (MYC-1671). The converter is built with explicit
 * **``force_full_page_ocr`` is intentionally NOT enabled.** It OCRs over a
   PDF's native text layer and measurably regresses digital PDFs; the router
   reaches docling for scanned/hard docs via the quality gate instead.
+* **Tesseract CLI's OCR ``lang=`` is always the detected installed set, never
+  the class default.** ``TesseractCliOcrOptions()``'s bare default is
+  ``lang=["eng", "spa", "fra", "deu"]``. docling 2.126.0 tolerated a language
+  with no traineddata installed (silently dropped); docling >= 2.127.0 made
+  that a hard ``OcrLanguageNotSupportedError`` at pipeline-init, so the bare
+  default crashes every parse on any host lacking the non-English packs —
+  including CI's ``apt-get install -y tesseract-ocr``, which ships only
+  ``eng``. See ``_tesseract_available_langs`` (parse-mcp #51).
 
 The tuned ``DocumentConverter`` loads several models, so it is built once
 and reused across calls (the previous code rebuilt it per parse).
@@ -43,6 +51,7 @@ import io
 import logging
 import os
 import shutil
+import subprocess
 import time
 from pathlib import Path
 
@@ -112,6 +121,59 @@ def _warn_if_ocr_degraded() -> bool:
     return False
 
 
+def _tesseract_available_langs(tesseract_cmd: str) -> list[str] | None:
+    """Languages the local ``tesseract`` binary actually has traineddata for.
+
+    MYC-4XXX / parse-mcp #51 (docling 2.126.0 -> 2.128.0). Upstream docling
+    2.127.0 hardened OCR-language resolution: a requested language with no
+    installed traineddata is now a hard ``OcrLanguageNotSupportedError`` at
+    pipeline-init time. Docling 2.126.0's ``TesseractOcrCliModel`` only
+    recorded which languages ``tesseract --list-langs`` reported and never
+    cross-checked the request against it before invoking tesseract, so an
+    unavailable language was silently dropped, never a failure. Upstream's own
+    docstring for the new behavior: "a language with no model is an error,
+    never a silent substitution" -- a deliberate hardening, not a bug.
+
+    ``TesseractCliOcrOptions()``'s class default is ``lang=["eng", "spa",
+    "fra", "deu"]`` and this backend never overrode it, so any host whose
+    tesseract install has only English -- CI's ``apt-get install -y
+    tesseract-ocr`` installs just the ``eng`` + ``osd`` traineddata; the extra
+    languages are separate apt packages (``tesseract-ocr-spa`` etc.) -- now
+    fails EVERY docling parse the instant OCR is needed: all 16 fixtures
+    errored before any measurement (fidelity-floor: 9/9 gated cells MISSING in
+    ~5s, previously a ~3min real run). Reproduced in a Linux container
+    matching CI exactly (Python 3.13.15, apt tesseract-ocr 5.3.4-1build5):
+    docling 2.126.0 passes 9/9, 2.127.0/2.128.0/2.129.0 all raise
+    ``OcrLanguageNotSupportedError: ... no model for the OCR language 'spa'``.
+
+    Detecting what is actually installed and requesting exactly that (rather
+    than hardcoding ``lang=["eng"]``) keeps the backend version-proof against
+    this class of upstream hardening AND keeps OCR genuinely multi-lingual on
+    any host that installs more language packs. Returns ``None`` when
+    detection itself fails (binary missing/errors/times out) so the caller
+    can fall back to a safe explicit default instead of the class default.
+    """
+    try:
+        out = subprocess.run(
+            [tesseract_cmd, "--list-langs"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=True,
+        )
+    except Exception:
+        return None
+    # First line is a header ("List of available languages ..."); the rest
+    # are one code per line. "osd" is the orientation/script-detection pack,
+    # not a real OCR language -- never request it as one.
+    langs = [
+        line.strip()
+        for line in out.stdout.splitlines()[1:]
+        if line.strip() and line.strip() != "osd"
+    ]
+    return langs or None
+
+
 def _build_converter():
     """Build the fidelity-tuned DocumentConverter (MYC-1671).
 
@@ -144,8 +206,18 @@ def _build_converter():
     opts.table_structure_options.do_cell_matching = True
     # Pin Tesseract CLI when the binary is present (measured fidelity winner);
     # otherwise keep docling's default OCR so a Tesseract-less host still works.
-    if opts.do_ocr and shutil.which("tesseract"):
-        opts.ocr_options = TesseractCliOcrOptions()
+    tesseract_cmd = shutil.which("tesseract")
+    if opts.do_ocr and tesseract_cmd:
+        # lang= ALWAYS explicit -- never the bare class default. See
+        # _tesseract_available_langs's docstring: docling >= 2.127.0 makes
+        # TesseractCliOcrOptions()'s default lang list (["eng","spa","fra",
+        # "deu"]) a hard requirement, and most hosts (incl. CI's apt install)
+        # only have "eng" traineddata, so the bare default crashes every OCR
+        # parse. Detect what is actually installed; fall back to ["eng"]
+        # (matches the fidelity corpus + this repo's validated baseline) only
+        # if detection itself fails.
+        langs = _tesseract_available_langs(tesseract_cmd) or ["eng"]
+        opts.ocr_options = TesseractCliOcrOptions(lang=langs)
 
     # Pin the pre-2.123.0 PDF backend explicitly (parse-mcp scanned-table
     # regression). docling PR #3764 ("Default to threaded docling-parse
