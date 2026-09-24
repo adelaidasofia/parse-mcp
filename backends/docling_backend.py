@@ -41,6 +41,14 @@ Pipeline tuning (MYC-1671). The converter is built with explicit
   default crashes every parse on any host lacking the non-English packs —
   including CI's ``apt-get install -y tesseract-ocr``, which ships only
   ``eng``. See ``_tesseract_available_langs`` (parse-mcp #51).
+* **``images_scale = 2.0``, with the PDF backend's ``render_scale`` matched
+  to it.** docling 2.128.0 (upstream PR #4244) deleted the pypdfium2-managed
+  PDF backend and made every rendered page default to 72 DPI
+  (``render_scale=1.0``) with no path from ``PdfPipelineOptions.images_scale``
+  to the backend's actual render resolution. Scanned-PDF table structure
+  recognition needs more than 72 DPI of pixel detail; unmatched
+  ``images_scale`` bumps are silently discarded (see ``_build_converter``,
+  parse-mcp #51).
 
 The tuned ``DocumentConverter`` loads several models, so it is built once
 and reused across calls (the previous code rebuilt it per parse).
@@ -181,6 +189,7 @@ def _build_converter():
     ``is_available()`` / catch it and surface a clean ParseResult.
     """
     from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
+    from docling.datamodel.backend_options import ThreadedDoclingParseBackendOptions
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
         PdfPipelineOptions,
@@ -237,11 +246,41 @@ def _build_converter():
     # the old backend restores the committed baseline (see requirements-docling.txt
     # for the pin + eval instructions). Revisit if a future docling release
     # measurably fixes the threaded backend's scanned-PDF fidelity.
+    #
+    # UPDATE (parse-mcp #51, docling 2.126.0 -> 2.128.0): the pin above is now
+    # a no-op, and scanned_pdf/table regressed a second time to the exact same
+    # 0.9645 MYC-4802 measured. Upstream PR #4244 ("threaded-only
+    # docling-parse", 2.128.0) deleted the old pypdfium2-managed
+    # implementation outright: DoclingParseDocumentBackend (and V2/V4) are now
+    # deprecated aliases of ThreadedDoclingParseDocumentBackend, which is also
+    # PdfFormatOption's own default — so the pin no longer selects different
+    # behavior, it just resolves to the class docling would have picked
+    # anyway. Root cause this time: ThreadedDoclingParseBackendOptions
+    # defaults render_scale=1.0 (72 DPI), and PdfFormatOption never wires
+    # PdfPipelineOptions.images_scale into it (only NativePdfFormatOption
+    # does, which this backend does not use) — every page rendered at 72 DPI
+    # regardless of what the table-structure model needed. Bumping
+    # images_scale alone does NOT fix it: mismatched render_scale forces a
+    # second render that reuses the same 72 DPI decode (measured identical to
+    # the un-bumped regression). Explicitly matching render_scale to
+    # images_scale restores the exact 0.9886 baseline (see parse-mcp #51 PR
+    # description for the per-config score table). A real, non-deprecated
+    # pypdfium2 backend still exists
+    # (docling.backend.pypdfium2_backend.PyPdfiumDocumentBackend) and also
+    # restores 0.9886, but it swaps the text/cell-extraction algorithm for
+    # every PDF class, not just render resolution — images_scale is the
+    # narrower fix and keeps this backend on docling's actively maintained
+    # code path.
     # Same tuned pipeline for born-digital/scanned PDFs and standalone images.
+    opts.images_scale = 2.0
     return DocumentConverter(
         format_options={
             InputFormat.PDF: PdfFormatOption(
-                pipeline_options=opts, backend=DoclingParseDocumentBackend
+                pipeline_options=opts,
+                backend=DoclingParseDocumentBackend,
+                backend_options=ThreadedDoclingParseBackendOptions(
+                    render_scale=opts.images_scale
+                ),
             ),
             InputFormat.IMAGE: ImageFormatOption(pipeline_options=opts),
         }
